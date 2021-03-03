@@ -1,0 +1,8 @@
+<view class="page">
+  <view class="touch-content">
+    <view class="touch-title">选择目标楼层</view>
+    <input class="touch-input" type="number" placeholder="请输入-10至-1或者1至127之间的一个楼层值" bindinput="getInput" />
+    <button style="background: linear-gradient(to right, #66ded0, #229dfe);color:white;" class="sureBtn"
+      bindtap="touch" hover-class="bindtap">确定</button>
+  </view>
+</view>

@@ -1,0 +1,76 @@
+page,.page {
+  height: 100%;
+  width: 100%;
+  font-family: 'PingFang SC', 'Helvetica Neue', Helvetica, 'Droid Sans Fallback', 'Microsoft Yahei', sans-serif;
+  background-color: #edecf2;
+}
+.page{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.sureBtn{
+  margin-left: 40rpx;
+  margin-top: 100rpx;
+  margin-right: 40rpx;
+  margin-bottom: 10rpx;
+}
+
+.row{
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  height: 90rpx;
+  width: 100%;
+}
+
+.row text{
+  margin-left: 40rpx;
+}
+
+.row view{
+  position: fixed;
+  right: 80rpx;
+}
+
+.row image{
+  position: fixed;
+  right: 20rpx;
+}
+
+.row input{
+  position: fixed;
+  right: 0rpx;
+  width: 60%;
+}
+
+.font-color{
+  color: #bbb;
+}
+
+.backgrounp-color{
+  background-color: #fff;
+}
+
+.icon{
+  width: 30rpx;
+  height: 30rpx;
+}
+
+.line{
+  width: 100%;
+  height: 3rpx;
+  background-color: #edecf2;
+}
+
+.bg{
+  width: 100%;
+  height: 30rpx;
+  background-color: #edecf2;
+}
+
+.bindtap{
+  opacity: 0.6;
+  background: #f7f7f7;
+}

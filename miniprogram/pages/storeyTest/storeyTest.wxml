@@ -1,0 +1,20 @@
+<view class="page">
+
+  <view class="test-content">
+    <view class="test-title">目标楼层</view>
+    <input class="test-input" type="text" placeholder="请输入-10至-1或者1至127之间的一个楼层值" bindinput="getInput"/>
+    <button style="background: linear-gradient(to right, #66ded0, #229dfe);color:white;" class="sureBtn"
+      bindtap="storeyTest" hover-class="bindtap">测试</button>
+  </view> 
+  <view class="test-content">
+    <view class="test-title">测试开门</view>
+    <button style="background: linear-gradient(to right, #66ded0, #229dfe);color:white;" class="sureBtn"
+      bindtap="testOpenDoor" hover-class="bindtap">测试开门</button>
+  </view> 
+  <view class="test-content">
+    <view class="test-title">查询当前楼层</view>
+    <view class = "floorNumber">"{{queryFloorNumber}}" > "{{runningState}}"</view>
+    <button style="background: linear-gradient(to right, #66ded0, #229dfe);color:white;" class="sureBtn"
+      bindtap="queryCurrentFloor_Once" hover-class="bindtap">查询当前楼层</button>
+  </view> 
+</view>

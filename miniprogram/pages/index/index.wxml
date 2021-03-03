@@ -1,0 +1,140 @@
+<view class="page">
+  <!-- 登录界面 -->
+  <view class="login-content" wx:if="{{isLogin}}">
+    <view class="login-input">
+      <image src="../../images/account.png"></image>
+      <input type="text" placeholder="请输入账号" bindinput="getAccount"/>
+    </view>
+    <view class="login-input">
+      <image src="../../images/password.png"></image>
+      <input type="text" placeholder="请输入密码" password="true" bindinput="getPassword"/>
+    </view>
+    <button style="background: linear-gradient(to right, #66ded0, #229dfe);color:white;" class="login-sureBtn"
+      bindtap="login" hover-class="bindtap">立即登录</button>
+    <view class="login-line">-----其他-----</view>
+    <view class="othrLogin">
+      <button  open-type="getUserInfo" bindgetuserinfo="wechatLogin" style="width: 180rpx;height: 120rpx;" class="wechat">
+         <image src="../../images/wechat.png"  class="wechat-img"></image>
+      </button>
+      
+      <!-- 注册 -->
+      <!-- <image src="../../images/registered.png" bindtap="registered" class="login-img"></image> -->
+    </view>
+  </view>
+
+  <scroll-view class="portConfig" scroll-y="ture" wx:if="{{!isLink&&!isLogin}}">
+    <view class="itme-list" wx:for-items="{{list}}" wx:for-item="item" data-title="{{item.deviceId}}"
+      data-name="{{item.name||item.localName}}" data-deviceId="{{item.deviceId}}" wx:key="{{item.deviceId}}"
+      bindtap="bindLinkTap" hover-class="bindtap">
+      <view class="item">
+        <image src="../../images/blueYa.png"></image>
+        <view class="blueContent">
+          <view class="blueName">{{item.name}}</view>
+          <view class="deviceID">设备ID：{{item.deviceId}}</view>
+          <view class="status">信号强弱：{{item.RSSI>=-80?'强':'弱'}}</view>
+        </view>
+      </view>
+      <view class="line"></view>
+    </view>
+  </scroll-view>
+  
+  <view class="content" wx:if="{{isLink}}">
+    <view class="title">
+      <view class="icon"></view>
+      <text>配置与测试</text>
+    </view>
+    <view class="nav">
+      <view class="row">
+        <view class="nav-left" bindtap="{{mapConfigDisable?'mapTap':'tip'}}" hover-class="bindtap">
+          <image src="../../images/map.png" class="nav-icon"></image>
+          继电器映射
+        </view>
+        <view class="nav-right" bindtap="{{calibrationDisable?'calibrationTap':'tip'}}" hover-class="bindtap">
+          <image class="nav-icon" src="../../images/calibration.png"></image>
+          继电器标定
+        </view>
+      </view>
+      <view class="row">
+        <view class="nav-left" bindtap="{{storeyTestDisable?'testTap':'tip'}}" hover-class="bindtap">
+          <image class="nav-icon" src="../../images/test.png"></image>
+          楼层测试
+        </view>
+        <view class="nav-right" bindtap="resetTap" hover-class="bindtap">
+          <image class="nav-icon" src="../../images/reset.png"></image>
+          继电器重置
+        </view>
+      </view>
+      <view class="row">
+        <view class="nav-left" bindtap="{{timeConfigDisable?'timeConfigTap':'tip'}}" hover-class="bindtap">
+          <image class="nav-icon" src="../../images/timeSetting.png"></image>
+          时间配置
+        </view>
+        <view class="nav-right" bindtap="{{errorConfigDisable?'errorConfigTap':'tip'}}" hover-class="bindtap">
+          <image class="nav-icon" src="../../images/errorConfig.png"></image>
+          平层参数配置
+        </view>
+      </view>
+    </view>
+
+    <view class="title">
+      <view class="icon"></view>
+      <text>模拟运行</text>
+    </view>
+    <view class="nav">
+      <view class="row">
+        <view class="nav-left {{isApplyTap?'bc':''}}" bindtap="applyTap" hover-class="bindtap">
+          <image wx:if="{{!isApplyTap}}" class="nav-icon" src="../../images/apply-tab.png"></image>
+          <image wx:if="{{isApplyTap}}" class="nav-icon" src="../../images/apply.png"></image>
+          申请电梯
+        </view>
+        <view class="nav-right {{isApplyTap?'':'bc'}}" bindtap="{{touchDisable?'touchTap':'tip'}}" hover-class="bindtap">
+          <image wx:if="{{!isApplyTap}}" class="nav-icon" src="../../images/touch.png"></image>
+          <image wx:if="{{isApplyTap}}" class="nav-icon" src="../../images/touch-tab.png"></image>
+          触发楼层按键
+        </view>
+      </view>
+      <view class="row">
+        <view class="nav-left  {{isTouchTab?'':'bc'}}" bindtap="keepDoor" hover-class="bindtap">
+          <image wx:if="{{!isTouchTab}}" class="nav-icon" src="../../images/door.png"></image>
+          <image wx:if="{{isTouchTab}}" class="nav-icon" src="../../images/door-tab.png"></image>
+          保持电梯开门
+        </view>
+        <view class="nav-right {{isTouchTab?'':'bc'}}" bindtap="closeDoor" hover-class="bindtap">
+          <image wx:if="{{!isTouchTab}}" class="nav-icon" src="../../images/close-door.png"></image>
+          <image wx:if="{{isTouchTab}}" class="nav-icon" src="../../images/close-door-tab.png"></image>
+          关闭电梯门
+        </view>
+      </view>
+      <view class="row">
+        <view class="nav-left {{isTouchTab?'':'bc'}}" bindtap="cancelTap" hover-class="bindtap">
+          <image wx:if="{{!isTouchTab}}" class="nav-icon" src="../../images/cancel.png"></image>
+          <image wx:if="{{isTouchTab}}" class="nav-icon" src="../../images/cancel-tab.png"></image>
+          取消任务
+        </view>
+        <view class="nav-right {{isApplyTap?'':'bc'}}" bindtap="freshenTap" hover-class="bindtap">
+          <image wx:if="{{!isApplyTap}}" class="nav-icon" src="../../images/freshen.png"></image>
+          <image wx:if="{{isApplyTap}}" class="nav-icon" src="../../images/freshen-tab.png"></image>
+          释放电梯
+        </view>
+      </view>
+    </view>
+
+    <view class="title">
+      <view class="icon"></view>
+      <text>其他</text>
+    </view>
+    <view class="nav">
+      <view class="row">
+        <view class="nav-left" bindtap="{{rebootDisable?'rebootTap':'tip'}}" hover-class="bindtap">
+          <image class="nav-icon" src="../../images/reboot.png"></image>
+          重启
+        </view>
+        <view class="nav-right" bindtap="{{printfDisable?'printfTap':'tip'}}" hover-class="bindtap">
+          <image class="nav-icon" src="../../images/printf.png"></image>
+          调试输出
+        </view>
+      </view>
+    </view>
+    <view class="buttom">已经到底了噢~</view>
+  </view>
+</view>

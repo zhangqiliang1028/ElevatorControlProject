@@ -1,0 +1,7 @@
+{
+  "usingComponents": {},
+  "navigationBarTitleText": "卡高智能",
+  "navigationBarBackgroundColor": "#0387FE",
+  "navigationBarTextStyle": "white",
+  "enablePullDownRefresh": true
+}

@@ -1,0 +1,19 @@
+<view class="page">
+  <view class="row font-color">
+    <text>无线频率</text>
+    <view>默认</view>
+    <image class="icon" src="../../images/right.png"></image>
+  </view>
+  <view class="bg"></view>
+  <view class="row backgrounp-color">
+    <text>类型</text>
+    <view>电梯/V1</view>
+    <image class="icon" src="../../images/right.png"></image>
+  </view>
+  <view class="line"></view>
+  <view class="row backgrounp-color">
+    <text>电梯ID</text>
+    <input type="number" placeholder="请输入电梯ID" bindinput="getInput"/>
+  </view>
+  <button style="background: linear-gradient(to right, #66ded0, #229dfe);color:white;" class="sureBtn" bindtap="sendLinkMsg" hover-class="bindtap">确定</button>
+</view>

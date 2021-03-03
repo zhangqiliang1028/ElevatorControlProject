@@ -1,0 +1,28 @@
+<view class="page">
+  <view class="content">
+    <view class="title">欢迎注册卡高智能账号</view>
+    <view class="input">
+      <image src="../../images/phone.png"></image>
+      <input type="text" placeholder="请输入手机号" bindinput="getAccount" value="{{userInfo.account}}" />
+    </view>
+    <view class="input">
+      <image src="../../images/password-registered.png"></image>
+      <input type="text" placeholder="请输入密码" bindinput="getPassword" value="{{userInfo.password}}" />
+    </view>
+    <view class="input">
+      <image src="../../images/againt.png"></image>
+      <input type="text" placeholder="请再次输入密码" bindinput="getAgPassword" value="{{agPassword}}" />
+    </view>
+    <button style="background: linear-gradient(to right, #66ded0, #229dfe);color:white;" class="sureBtn"
+      bindtap="registered" hover-class="bindtap">注册</button>
+    <view class="otherOp">
+      <view class="gray" bindtap="forgetPassword">忘记密码？</view>
+      <view></view>
+      <view class="blue" bindtap="login">登录账号</view>
+    </view>
+    <modal hidden="{{hiddenmodalput}}" title="请输入邮箱号" confirm-text="提交" cancel-text="取消" bindcancel="cancel"
+      bindconfirm="confirm">
+      <input type='text' placeholder="请输入接收密码邮箱" auto-focus bindinput="getEmail" value="{{email}}"/>
+    </modal>
+  </view>
+</view>

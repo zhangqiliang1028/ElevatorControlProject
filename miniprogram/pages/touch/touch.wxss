@@ -1,0 +1,67 @@
+page,.page {
+  height: 100%;
+  width: 100%;
+  font-family: 'PingFang SC', 'Helvetica Neue', Helvetica, 'Droid Sans Fallback', 'Microsoft Yahei', sans-serif;
+  background-color: rgb(240, 240, 250);
+}
+
+.page{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.sureBtn{
+  margin-left: 40rpx;
+  margin-top: 100rpx;
+  margin-right: 40rpx;
+  margin-bottom: 100rpx;
+}
+
+
+
+/* 触发楼层按键 */
+.touch-content{
+
+  width: 96%;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  background-color: #fff;
+  border-bottom:1rpx solid #ddd ;
+  border-radius: 12rpx;
+
+  margin-top: 15rpx;
+  z-index: 1;
+}
+
+.touch-title{
+  width: 92%;
+  height: 100rpx;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  font-size: 36rpx;
+  font-weight: 500;
+
+  margin-top: 25rpx;
+  margin-left: 4%;
+  border-bottom: 1rpx solid #ddd;
+}
+
+.touch-input{
+  width: 92%;
+  height: auto; 
+  margin-left: 4%;
+  margin-top: 25rpx;
+
+}
+
+.bindtap{
+  opacity: 0.6;
+  background: #f7f7f7;
+}

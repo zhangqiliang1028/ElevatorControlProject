@@ -1,0 +1,110 @@
+page,.page {
+  height: 100%;
+  width: 100%;
+  font-family: 'PingFang SC', 'Helvetica Neue', Helvetica, 'Droid Sans Fallback', 'Microsoft Yahei', sans-serif;
+  background-color: rgb(240, 240, 250);
+}
+
+.page{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.contents{
+  width: 96%;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  border-radius: 12rpx;
+  border: 1rpx solid #cdcd;
+  background-color: #fff;
+  margin-top: 15rpx;
+}
+
+
+.sureBtn{
+  margin-left: 40rpx;
+  margin-top: 100rpx;
+  margin-right: 40rpx;
+  margin-bottom: 100rpx;
+}
+
+/* 加减组件 */
+.stepper {
+  width:105px;
+  height:30px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+}
+/*加号和减号*/
+.stepper text {
+  float: left;
+  width: 25px;
+  line-height: 26px;
+  text-align: center;
+}
+/*数值*/
+.stepper view {
+  width: 50px;
+  height: 30px;
+  float: left;
+  margin: 0 auto;
+  text-align: center;
+  font-size: 12px;
+  border-left: 1px solid #ccc;
+  border-right: 1px solid #ccc;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+/* 图标 */
+.row image{
+  width: 40rpx;
+  height: 40rpx;
+  margin-left: 7%;
+}
+/*普通样式*/
+.stepper .normal {
+  color:black;
+}
+
+/*禁用样式*/
+.stepper .disable {
+  color: #ccc;
+}
+
+/* 输入样式设置 */
+.row{
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 90rpx;
+  align-items: center;
+
+  border-bottom: 1rpx solid #cdcd;
+  margin-top: 10rpx;
+}
+
+.title{
+  margin-left: 30rpx;
+  width: 50%;
+  height: 90rpx;
+  display: flex;
+  align-items: center;
+}
+
+.fun-about{
+  width: 100%;
+  margin-top: 10rpx;
+  margin-left: 60rpx;
+  margin-bottom: 36rpx;
+  color: #aaa;
+}
+.bindtap{
+  opacity: 0.6;
+  background: #f7f7f7;
+}

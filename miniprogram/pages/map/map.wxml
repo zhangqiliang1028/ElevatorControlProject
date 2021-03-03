@@ -1,0 +1,73 @@
+<view class="page">
+  <view class="map-content">
+    <view class="map-title">设置映射关系</view>
+    <view class="picker">
+      <picker bindchange="bindPickerRChange" value="{{rIndex}}" range="{{rGroupArray}}" range-key="name" class="picker-tab">
+        <view>{{rGroupArray[rIndex].name}}</view>
+      </picker>
+      <view class='arrow'></view>
+    </view>
+    <view class="map-title">刷卡方式</view>
+    <view class="picker">
+      <picker bindchange="bindPickerOChange" value="{{oIndex}}" range="{{oGroupArray}}" range-key="name" class="picker-tab">
+        <view>{{oGroupArray[oIndex].name}}</view>
+      </picker>
+      <view class='arrow'></view>
+    </view>
+    <view class="map-inputList">
+      <view class="map-row">
+        <view class="row-left">
+          <text>1号</text>
+          <input type="text" placeholder="-10至127" value="{{oneInput}}" bindinput="oneInput"/>
+        </view>
+        <view class="row-right">
+          <text>2号</text>
+          <input type="text" placeholder="-10至127" value="{{twoInput}}" bindinput="twoInput"/>
+        </view>
+      </view>
+      <view class="map-row">
+        <view class="row-left">
+          <text>3号</text>
+          <input type="text" placeholder="-10至127" value="{{threeInput}}" bindinput="threeInput"/>
+        </view>
+        <view class="row-right">
+          <text>4号</text>
+          <input type="text" placeholder="-10至127" value="{{fourInput}}" bindinput="fourInput"/>
+        </view>
+      </view>
+      <view class="map-row">
+        <view class="row-left">
+          <text>5号</text>
+          <input type="text" placeholder="-10至127" value="{{fiftyInput}}" bindinput="fiftyInput"/>
+        </view>
+        <view class="row-right">
+          <text>6号</text>
+          <input type="text" placeholder="-10至127" value="{{sixInput}}" bindinput="sixInput"/>
+        </view>
+      </view>
+      <view class="map-row">
+        <view class="row-left">
+          <text>7号</text>
+          <input type="text" placeholder="-10至127" value="{{sevenInput}}" bindinput="sevenInput"/>
+        </view>
+        <view class="row-right">
+          <text>8号</text>
+          <input type="text" placeholder="-10至127" value="{{eightInput}}" bindinput="eightInput"/>
+        </view>
+      </view>
+    </view>
+    <button style="background: linear-gradient(to right, #66ded0, #229dfe);color:white;" class="sureBtn"
+      bindtap="sendMappingMsg" hover-class="bindtap">设置</button>
+
+      <view class="maped-list">
+        <view class="tab" wx:if="{{isOneInput}}">1号</view>
+        <view class="tab" wx:if="{{isTwoInput}}">2号</view>
+        <view class="tab" wx:if="{{isThreeInput}}">3号</view>
+        <view class="tab" wx:if="{{isFourInput}}">4号</view>
+        <view class="tab" wx:if="{{isFiftyInput}}">5号</view>
+        <view class="tab" wx:if="{{isSixInput}}">6号</view>
+        <view class="tab" wx:if="{{isSevenInput}}">7号</view>
+        <view class="tab" wx:if="{{isEightInput}}">8号</view>
+      </view>
+  </view>
+</view>

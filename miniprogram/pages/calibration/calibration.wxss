@@ -1,0 +1,96 @@
+page,.page {
+  height: 100%;
+  width: 100%;
+  font-family: 'PingFang SC', 'Helvetica Neue', Helvetica, 'Droid Sans Fallback', 'Microsoft Yahei', sans-serif;
+  background-color: rgb(240, 240, 250);
+}
+
+.page{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* 继电器标定界面 */
+.cal-content{
+  width: 96%;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12rpx;
+  border: 2rpx solid #ddd;
+
+  background-color: #fff;
+  z-index: 1;
+
+  margin-top: 15rpx;
+}
+
+.cal-title{
+  width: 90%;
+  height: 60rpx;
+
+  font-size: 40rpx;
+  font-weight: 500;
+
+  margin-top: 25rpx;
+  margin-left: 4%;
+  margin-bottom: 20rpx;
+}
+
+.cal-tip{
+  width: 92%;
+  height: auto;
+  color: rgb(255, 168, 5);
+  margin-left: 4%;
+}
+
+.cal-input{
+  width: 92%;
+  margin-top: 25rpx;
+  margin-left: 4%;
+  border-bottom: 1rpx solid #ddd;
+}
+
+
+.sureBtn{
+  margin-left: 40rpx;
+  margin-top: 100rpx;
+  margin-right: 40rpx;
+  margin-bottom: 100rpx;
+}
+
+/* 下拉选项 */
+.picker{
+  width: 92%;
+  height: 60rpx;
+  margin-top: 30rpx;
+  margin-left: 4%;
+  border-bottom: 1rpx solid #ddd;
+  font-size: 35rpx;
+  display: flex;
+  flex-direction: row;
+}
+
+.arrow{
+  width: 15rpx;
+  height: 15rpx;
+  border: 2rpx solid #888;
+  border-bottom: none;
+  border-left: none;
+  transform: rotate(135deg);
+}
+
+.picker-tab{
+  width: 96%;
+}
+
+.line{
+  width: 100%;
+  height: 20rpx;
+}
+
+.bindtap{
+    opacity: 0.6;
+    background: #f7f7f7;
+}

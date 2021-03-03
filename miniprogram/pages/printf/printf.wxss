@@ -1,0 +1,61 @@
+page,.page {
+  height: auto;
+  width: 100%;
+  font-family: 'PingFang SC', 'Helvetica Neue', Helvetica, 'Droid Sans Fallback', 'Microsoft Yahei', sans-serif;
+  background-color: rgb(46, 46, 46);
+  color: #fff;
+}
+
+.page{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.top{
+  width: 100%;
+  height: 50rpx;
+  background-color: #0387FE;
+
+  display: flex;
+  flex-direction: row;
+  color: white;
+  font-size: 35rpx;
+  border-top:2rpx solid #fff ;
+
+  position: fixed;
+}
+.left{
+  width: 70%;
+  margin-left: 30rpx;
+  border-right:2rpx solid #fff ;
+}
+
+.right{
+  width: 25%;
+  margin-left: 30rpx;
+}
+
+.content{
+  display: flex;
+  flex-direction: column;
+  width: 96%;
+  height: auto;
+  margin-top: 50rpx;
+}
+
+.printf{
+  width: 100%;
+  height: auto;
+  display: flex;
+  flex-direction: row;
+  margin-top: 20rpx;
+}
+
+.printf-content{
+  margin-left: 10rpx;
+}
+
+.bindtap{
+  opacity: 0.6;
+  background: #f7f7f7;
+}

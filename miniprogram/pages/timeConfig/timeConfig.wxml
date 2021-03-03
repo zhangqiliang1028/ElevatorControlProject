@@ -1,0 +1,93 @@
+<view class="page">
+  <view class="contents">
+    <view class="row">
+      <text class="title">梯控状态上报周期(s)</text>
+      <view class='stepper'>
+        <text class='{{status.minus}}' type='number' bindtap='bindStatusMnius'>-</text>
+        <view class="tab">{{status.number}}</view>
+        <text bindtap='bindStatusPlus' class="{{status.plus}}">+</text>
+      </view>
+      <image src="../../images/about.png" bindtap="aboutStatus"></image>
+    </view>
+    <view class="fun-about" wx:if="{{status.isShow}}">功能介绍：周期上报梯控状态的时间间隔</view>
+
+    <view class="row">
+      <text class="title">楼层距离测定周期(ms)</text>
+      <view class='stepper'>
+        <text class='{{distance.minus}}' type='number' bindtap='bindDistanceMnius'>-</text>
+        <view class="tab">{{distance.number}}</view>
+        <text bindtap='bindDistancePlus' class="{{distance.plus}}">+</text>
+      </view>
+      <image src="../../images/about.png" bindtap="distanceAbout"></image>
+    </view>
+    <view class="fun-about" wx:if="{{distance.isShow}}">功能介绍：通过UWB进行楼层测距的时间间隔</view>
+
+    <view class="row">
+      <text class="title">等待呼梯任务超时(s)</text>
+      <view class='stepper'>
+        <text class='{{call.minus}}' type='number' bindtap='bindCallMnius'>-</text>
+        <view class="tab">{{call.number}}</view>
+        <text bindtap='bindCallPlus' class="{{call.plus}}">+</text>
+      </view>
+      <image src="../../images/about.png" bindtap="callAbout"></image>
+    </view>
+    <view class="fun-about" wx:if="{{call.isShow}}">功能介绍：机器人申请到电梯权限后发起乘梯任务的超时时间</view>
+
+    <view class="row">
+      <text class="title">开门消息回复超时(s)</text>
+      <view class='stepper'>
+        <text class='{{message.minus}}' type='number' bindtap='bindMessageMinus'>-</text>
+        <view class="tab">{{message.number}}</view>
+        <text bindtap='bindMessagePlus' class="{{message.plus}}">+</text>
+      </view>
+      <image src="../../images/about.png" bindtap="messageAbout"></image>
+    </view>
+    <view class="fun-about" wx:if="{{message.isShow}}">功能介绍：电梯到达后，机器人回复电梯到达消息的超时时间</view>
+
+    <view class="row">
+      <text class="title">开门超时重置周期(s)</text>
+      <view class='stepper'>
+        <text class='{{reset.minus}}' type='number' bindtap='bindResetMinus'>-</text>
+        <view class="tab">{{reset.number}}</view>
+        <text bindtap='bindResetPlus' class="{{reset.plus}}">+</text>
+      </view>
+      <image src="../../images/about.png" bindtap="resetAbout"></image>
+    </view>
+    <view class="fun-about" wx:if="{{reset.isShow}}">功能介绍：重置后，开门状态可再延续一个周期</view>
+
+    <view class="row">
+      <text class="title">开门最长保持时间(s)</text>
+      <view class='stepper'>
+        <text class='{{maxKeep.minus}}' type='number' bindtap='bindMaxKeepMinus'>-</text>
+        <view class="tab">{{maxKeep.number}}</view>
+        <text bindtap='bindMaxKeepPlus' class="{{maxKeep.plus}}">+</text>
+      </view>
+      <image src="../../images/about.png" bindtap="maxKeepAbout"></image>
+    </view>
+    <view class="fun-about" wx:if="{{maxKeep.isShow}}">功能介绍：电梯保持开门状态的最长时间</view>
+
+    <view class="row">
+      <text class="title">楼层按键重按间隔(s)</text>
+      <view class='stepper'>
+        <text class='{{btnReset.minus}}' type='number' bindtap='bindBtnResetMinus'>-</text>
+        <view class="tab">{{btnReset.number}}</view>
+        <text bindtap='bindBtnResetPlus' class="{{btnReset.plus}}">+</text>
+      </view>
+      <image src="../../images/about.png" bindtap="btnResetAbout"></image>
+    </view>
+    <view class="fun-about" wx:if="{{btnReset.isShow}}">功能介绍：为防止楼层按键被取消，反复按楼层按键的间隔时间</view>
+
+    <view class="row">
+      <text class="title">按键按下停顿时间(ms)</text>
+      <view class='stepper'>
+        <text class='{{pause.minus}}' type='number' bindtap='bindPauseMinus'>-</text>
+        <view class="tab">{{pause.number}}</view>
+        <text bindtap='bindPausePlus' class="{{pause.plus}}">+</text>
+      </view>
+      <image src="../../images/about.png" bindtap="pauseAbout"></image>
+    </view>
+    <view class="fun-about" wx:if="{{pause.isShow}}">功能介绍：按下楼层按键时按下状态保持时间</view>
+  <button style="background: linear-gradient(to right, #66ded0, #229dfe);color:white;" class="sureBtn"
+    bindtap="sendTimeMsg" hover-class="bindtap">确定</button>
+</view>
+</view>
