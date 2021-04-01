@@ -3,35 +3,32 @@
     <view class="row">
       <text class="title">平层距离测定误差(mm)</text>
       <view class='stepper'>
-        <text class='{{rangeError.minus}}' type='number' bindtap='bindRangeErrorMinus'>-</text>
-        <view class="tab">{{rangeError.number}}</view>
-        <text bindtap='bindRangeErrorPlus' class="{{rangeError.plus}}">+</text>
+         <input type="text"  value="{{rangeError.number}}" class="tab" bindinput="getRangeError"/>
       </view>
       <image src="../../images/about.png" bindtap="rangeErrorAbout"></image>
     </view>
-    <view class="fun-about" wx:if="{{rangeError.isShow}}">功能介绍：根据距离进行楼层测定时允许的误差范围</view>
+    <view class="fun-about1" wx:if="{{rangeError.isShow}}">功能介绍：根据距离进行楼层测定时允许的误差范围</view>
+    <view class="fun-about" wx:if="{{rangeError.isShow}}">参数范围：1-3000 (ms)</view>
 
     <view class="row">
       <text class="title">测距异常容忍次数(次)</text>
       <view class='stepper'>
-        <text class='{{toleranceTimes.minus}}' type='number' bindtap='bindToleranceTimesMinus'>-</text>
-        <view class="tab">{{toleranceTimes.number}}</view>
-        <text bindtap='bindToleranceTimesPlus' class="{{toleranceTimes.plus}}">+</text>
+        <input type="text"  value="{{toleranceTimes.number}}" class="tab" bindinput="getToleranceTime"/>
       </view>
       <image src="../../images/about.png" bindtap="toleranceTimesAbout"></image>
     </view>
-    <view class="fun-about" wx:if="{{toleranceTimes.isShow}}">功能介绍：判定平层错误时连续测距异常的最小次数</view>
+    <view class="fun-about1" wx:if="{{toleranceTimes.isShow}}">功能介绍：判定平层错误时连续测距异常的最小次数</view>
+    <view class="fun-about" wx:if="{{toleranceTimes.isShow}}">参数范围：1-16 (次)</view>
 
     <view class="row">
       <text class="title">平层异常检测时长(s)</text>
       <view class='stepper'>
-        <text class='{{detectionTime.minus}}' type='number' bindtap='bindDetectionTimeMinus'>-</text>
-        <view class="tab">{{detectionTime.number}}</view>
-        <text bindtap='bindDetectionTimePlus' class="{{detectionTime.plus}}">+</text>
+        <input type="number"  value="{{detectionTime.number}}" class="tab" bindinput="getDetecttionTime"/>
       </view>
       <image src="../../images/about.png" bindtap="detectionTimeAbout"></image>
     </view>
-    <view class="fun-about" wx:if="{{detectionTime.isShow}}">功能介绍：平层后进行平层异常检测的最长时间</view>
+    <view class="fun-about1" wx:if="{{detectionTime.isShow}}">功能介绍：平层后进行平层异常检测的最长时间</view>
+    <view class="fun-about" wx:if="{{detectionTime.isShow}}">参数范围：1-10 (s)</view>
 
     <button style="background: linear-gradient(to right, #66ded0, #229dfe);color:white;" class="sureBtn"
       bindtap="errorConfig" hover-class="bindtap">确定</button>

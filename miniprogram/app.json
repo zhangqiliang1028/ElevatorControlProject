@@ -1,8 +1,9 @@
 {
-  "pages": [  
-    "pages/index/index",
-    "pages/printf/printf",
+  "cloud":true,
+  "pages": [ 
+    "pages/index/index", 
     "pages/reboot/reboot", 
+    "pages/printf/printf", 
     "pages/registered/registered",
     "pages/link/link",
     "pages/timeConfig/timeConfig",
@@ -12,13 +13,13 @@
     "pages/storeyTest/storeyTest",
     "pages/touch/touch"
   ],
+  
   "window": {
     "backgroundColor": "#F6F6F6",
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#F6F6F6",
     "navigationBarTitleText": "ETVP-miniapp",
-    "navigationBarTextStyle": "black",
-    "enablePullDownRefresh": true
+    "navigationBarTextStyle": "black"
   },
   "sitemapLocation": "sitemap.json",
   "style": "v2"

@@ -34,33 +34,15 @@ page,.page {
 
 /* 加减组件 */
 .stepper {
-  width:105px;
-  height:30px;
+  width: 105px;
+  height: 30px;
   border: 1px solid #ccc;
   border-radius: 3px;
-}
-/*加号和减号*/
-.stepper text {
-  float: left;
-  width: 25px;
-  line-height: 26px;
-  text-align: center;
-}
-/*数值*/
-.stepper view {
-  width: 50px;
-  height: 30px;
-  float: left;
-  margin: 0 auto;
-  text-align: center;
-  font-size: 12px;
-  border-left: 1px solid #ccc;
-  border-right: 1px solid #ccc;
+  /* 添加输入居中 */
   display: flex;
-  flex-direction: row;
-  justify-content: center;
   align-items: center;
 }
+
 /* 图标 */
 .row image{
   width: 40rpx;
@@ -84,7 +66,6 @@ page,.page {
   width: 100%;
   height: 90rpx;
   align-items: center;
-
   border-bottom: 1rpx solid #cdcd;
   margin-top: 10rpx;
 }
@@ -108,4 +89,19 @@ page,.page {
 .bindtap{
   opacity: 0.6;
   background: #f7f7f7;
+}
+
+.tab{
+  margin-left: 15%;
+  height: 100%;
+  width: 70%;
+  font-size: 25rpx;
+}
+
+.fun-about1 {
+  width: 95%;
+  margin-top: 10rpx;
+  margin-left: 25rpx;
+  /* margin-bottom: 22rpx; */
+  color: #aaa;
 }

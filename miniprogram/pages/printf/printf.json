@@ -2,5 +2,6 @@
   "usingComponents": {},
   "navigationBarTitleText": "调试输出",
   "navigationBarBackgroundColor": "#0387FE",
-  "navigationBarTextStyle": "white"
+  "navigationBarTextStyle": "white",
+  "enablePullDownRefresh": true
 }

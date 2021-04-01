@@ -2,15 +2,14 @@
 App({
 
   onLaunch: function () {
-    if(!wx.cloud){
-      console.log("基础库较低");
-    }else{
+    if (!wx.cloud) {
+      console.error('请使用 2.2.3 或以上的基础库以使用云能力')
+    } 
+    else {
       wx.cloud.init({
-        env:'offer-123',
         traceUser: true,
       })
     }
-
   },
 
   //全局变量
@@ -18,6 +17,7 @@ App({
     isLink:false ,//是否连接
     deviceId:'',
     serviceId:'',
+    isReBoot:false
   },
   //toast提示
   toastTips: function(txt) {

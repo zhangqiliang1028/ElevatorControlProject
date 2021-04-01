@@ -1,4 +1,3 @@
-const app = getApp()
 const utils = require("../../utils/util.js");
 
 const ROBOTID = 0x11111111
@@ -60,10 +59,13 @@ Page({
           'payloadRobotMsg.data[1]' : (floorNumber + 256) % 256
       })
 
-      
-    }
+      var deviceId = wx.getStorageSync('deviceId');
+      var serviceId = wx.getStorageSync('serviceId');
+      var writeCharacteristicId = wx.getStorageSync('writeCharacteristicId')
+      console.log("发送触发楼层按钮命令")
+      utils.writeBLECharacteristicValue(deviceId,serviceId,writeCharacteristicId,info,payloadRobotMsg);
 
-    
+    }
 
     var pages = getCurrentPages();
     var prevPage = pages[pages.length - 2];
@@ -74,6 +76,7 @@ Page({
       delta: 1,
     })
   },
+  
   onUnload(){
     var pages = getCurrentPages();
     var prevPage = pages[pages.length - 2];

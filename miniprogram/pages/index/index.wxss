@@ -13,6 +13,13 @@ page,.page {
 
 /* 登录界面 */
 
+/* 标题 */
+.tip{
+  font-size: 45rpx;
+  font-family: auto;
+  margin-bottom: 70rpx;
+}
+
 .login-sureBtn{
   margin-left: 40rpx;
   margin-top: 40rpx;

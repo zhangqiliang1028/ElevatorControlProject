@@ -1,14 +1,11 @@
-
-const { saveDataToCloud } = require("../../utils/util.js");
 const utils = require("../../utils/util.js");
+const Decoder = require("../../utils/Decoder.js");
 
 const app = getApp()
 const ROBOTID = 0x11111111
 //用于标识这是映射的第几个继电器
 var mappingindex = 0
 var mappingList = new Array()
-
-
 
 Page({
 
@@ -53,7 +50,10 @@ Page({
       needCard : 0,
       payloadLength : 4
     },
-    elevatorId:''
+    elevatorId:'',
+    //设置是否成功
+    isSuccess:true
+
   },
 
   /**
@@ -62,14 +62,186 @@ Page({
   onLoad: function () {
     console.log('开始监听蓝牙通信');
     var that =this ;
+    mappingindex = 0
+      mappingList = []
     var  deviceId =wx.getStorageSync('deviceId');
     var serviceId = wx.getStorageSync('serviceId');
     var elevatorId = wx.getStorageSync('elevatorId');
     that.setData({
       elevatorId:elevatorId
     })
-    utils.getBLEDeviceCharacteristics(serviceId,deviceId);
+    that.getBLEDeviceCharacteristics(serviceId,deviceId);
   },
+
+//获取蓝牙设备某个服务中的所有 characteristic（特征值）
+getBLEDeviceCharacteristics(serviceId,deviceId){
+  var that = this;
+  wx.getBLEDeviceCharacteristics({
+    deviceId: deviceId,
+    serviceId: serviceId,
+    success: function (res) {
+      for (let i = 0; i < res.characteristics.length; i++) {
+        let item = res.characteristics[i]
+        if (item.properties.read) { //该特征值是否支持 read 操作
+          var log = "该特征值支持 read 操作:" + item.uuid + "\n";
+          console.log(log);
+        }
+        if (item.properties.write) {//该特征值是否支持 write 操作
+          var log = "该特征值支持 write 操作:" + item.uuid + "\n";
+          console.log(log)
+          var writeCharacteristicId = item.uuid;
+          wx.setStorageSync('writeCharacteristicId', writeCharacteristicId);
+        }
+        if (item.properties.notify || item.properties.indicate) {//该特征值是否支持 notify或indicate 操作
+          var log = "该特征值支持 notify 操作:" + item.uuid + "\n";
+          console.log(log)
+          that.notifyBLECharacteristicValueChange(deviceId,serviceId,item.uuid);
+        }
+      }
+    }
+  })
+},
+
+//启用低功耗蓝牙设备特征值变化时的 notify 功能，订阅特征值。
+//注意：必须设备的特征值支持notify或者indicate才可以成功调用，具体参照 characteristic 的 properties 属性
+notifyBLECharacteristicValueChange(deviceId,serviceId,notifyCharacteristicId){
+  var that = this;
+  wx.notifyBLECharacteristicValueChange({
+    state: true, // 启用 notify 功能
+    deviceId: deviceId,
+    serviceId: serviceId,
+    characteristicId: notifyCharacteristicId,
+    success: function (res) {
+      var log = "notify启动成功" + res.errMsg+"\n";
+      console.log(log);
+      that.onBLECharacteristicValueChange();   //监听特征值变化
+    },
+    fail: function (res) {
+      if(res.errCode===10006){
+        wx.showToast({
+          title: '当前连接已断开',
+          icon:'none',
+          duration:2000
+        })
+      }else{
+        wx.showToast({
+        title: 'notify启动失败',
+        mask: true
+      });
+      setTimeout(function () {
+        wx.hideToast();
+      }, 2000)
+      }
+    }
+  })
+},
+
+ //监听低功耗蓝牙设备的特征值变化。必须先启用notify接口才能接收到设备推送的notification。
+onBLECharacteristicValueChange(){
+  var that = this;
+  wx.onBLECharacteristicValueChange(function (res) {
+
+    var resValue = utils.ab2hext(res.value); //16进制字符串
+    var strprint = Decoder.GBKHexstrToString(resValue)
+    console.log(strprint)
+    utils.saveDataToCloud(strprint);
+    
+    var resValueStr = utils.hexToString(resValue);
+    var msg = utils.analysis(resValueStr)
+    if(msg == undefined){
+      console.log("非回复消息")
+      return
+    }
+
+    if(msg.length >= 20){
+      that.onReceivedMsg(msg)
+    }
+  });
+},
+
+
+//在这里对消息进行解析
+onReceivedMsg(msg){
+  var that = this ; 
+
+  console.log("开始解析收到的信息")
+  console.log(msg[0] + msg[msg.length])
+  var msgHead = [
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00
+  ]
+  if(msg.length < 40){
+    console.log("接受消息小于头部长度")
+    return 
+  }
+  //构建头部消息
+  for(var i = 0;i < 20;++i){
+    msgHead[i] = parseInt(msg.substr(i*2,2),16)
+  }
+  
+  var payloadLength = msgHead[17] * 256 + msgHead[16]
+  console.log(msgHead[17])
+  console.log(msgHead[16])
+  console.log(payloadLength)
+  if(payloadLength != (msg.length - 40) / 2){
+    console.log("消息未接受完整 :" + payloadLength + " " + msg.length) 
+  }
+  if(msgHead[0] != 0x1E || msgHead[1] != 0x1F){
+    console.log("Head1 或者 Head2 错误")
+  }else{
+    if(utils.computeMsgHeadCRC(msgHead) != msgHead[18]){
+      console.log(utils.computeMsgHeadCRC(msgHead))
+      console.log(msgHead[18])
+      console.log("头部CRC错误")
+    }else{
+      //构建payload
+      var payload = new Uint8Array(payloadLength)
+      for(var i = 0;i < payloadLength;++i){
+        payload[i] = parseInt(msg.substr(40 + i*2 , 2),16)
+      }
+      if(utils.computePayloadCRC(payload,payloadLength) != msgHead[19]){
+        console.log("负载CRC校验错误")
+      }else{
+        var result = payload[2] * 256 + payload[3]
+        if(payload[0] == 0xE1){
+          if(result){
+            console.log("映射成功")
+            wx.showToast({
+              title: mappingindex+'号映射成功',
+              duration:1000
+            })
+            that.mappingByOrder();
+          }else{
+            console.log("映射失败")
+            wx.showToast({
+              title: '映射失败',
+              duration:2000
+            })
+          }
+        }
+      }
+    }
+  }
+},
+
 
   
 //picker事件
@@ -221,7 +393,6 @@ sixShow(){
     duration:1000
   })
     console.log('操作6号')
-  
     that.setData({
       isSixInput:true
     })
@@ -247,8 +418,7 @@ eightShow(){
     icon:'success',
     duration:1000
   })
-    console.log('操作7号')
-  
+    console.log('操作8号')
     that.setData({
       isEightInput:true
     })
@@ -258,7 +428,6 @@ eightShow(){
 mappingByOrder(){
   //点击设置后 显示设置成功的内容
   var that =this ;
-  var time = 0; //延迟展示完成标签
   var info = {
     elevator_id : 0x0,
     robot_id : 0x0
@@ -267,6 +436,7 @@ mappingByOrder(){
   info.elevatorId = elevatorId;
   info.robotId = ROBOTID
   
+
   if(mappingindex < mappingList.length){
     console.log("配置第" + (mappingindex + 1) + "个继电器")
     this.mappingConfig(info,mappingList[mappingindex].floorNumber,mappingList[mappingindex].relayID,mappingList[mappingindex].needCard)
@@ -274,7 +444,11 @@ mappingByOrder(){
     mappingindex++
   }else{
     console.log("继电器映射结束")
-    mappingindex = 0
+    wx.showToast({
+      title: '继电器映射完成',
+      duration:1000
+    })
+    that.clearAll();
   }
 },
 
@@ -282,197 +456,190 @@ mappingByOrder(){
 showRelay(relayID){
   var that = this ;
   if(relayID%8==0){
-    setTimeout(that.oneShow,2000);
+    that.oneShow
   }else if(relayID%8==1){
-    setTimeout(that.twoShow,2000);
+    that.twoShow,1000
   }else if(relayID%8==2){
-    setTimeout(that.threeShow,2000);
+   that.threeShow
   }else if(relayID%8==3){
-    setTimeout(that.fourShow,2000);
+    that.fourShow
   }else if(relayID%8==4){
-    setTimeout(that.fifftyShow,2000);
+    that.fifftyShow
   }else if(relayID%8==5){
-    setTimeout(that.sixShow,2000);
+    that.sixShow
   }else if(relayID%8==6){
-    setTimeout(that.sevenShow,2000);
+    that.sevenShow
   }else if(relayID%8==7){
-    setTimeout(that.eightShow,2000);
+    that.eightShow;
   }
 },
 
 //设置楼层映射
 mappingConfig(info,floorNumber,relayID,needCard){
-    console.log('设置'+floorNumber+'层映射命令');
-    var that = this ;
-    that.setData({
-      'payloadConfigItem.floorNumber':floorNumber,
-      'payloadConfigItem.relayID':relayID,
-      'payloadConfigItem.needCard':needCard,
-      'payloadConfigItem.data[0]':0xE1,
-      'payloadConfigItem.data[1]':(floorNumber + 256) % 256 ,
-      'payloadConfigItem.data[2]': relayID % 256,
-      'payloadConfigItem.data[3]':needCard % 256,
-    })
-    var deviceId = wx.getStorageSync('deviceId');
-    var serviceId = wx.getStorageSync('serviceId');
-    var writeCharacteristicId = wx.getStorageSync('writeCharacteristicId');
-    utils.writeBLECharacteristicValue(deviceId,serviceId,writeCharacteristicId,info,that.data.payloadConfigItem);
+  console.log('设置'+floorNumber+'层映射命令');
+  var that = this ;
+  that.setData({
+    'payloadConfigItem.floorNumber':floorNumber,
+    'payloadConfigItem.relayID':relayID,
+    'payloadConfigItem.needCard':needCard,
+    'payloadConfigItem.data[0]':0xE1,
+    'payloadConfigItem.data[1]':(floorNumber + 256) % 256 ,
+    'payloadConfigItem.data[2]': relayID % 256,
+    'payloadConfigItem.data[3]':needCard % 256,
+  })
+  var deviceId = wx.getStorageSync('deviceId');
+  var serviceId = wx.getStorageSync('serviceId');
+  var writeCharacteristicId = wx.getStorageSync('writeCharacteristicId');
+  utils.writeBLECharacteristicValue(deviceId,serviceId,writeCharacteristicId,info,that.data.payloadConfigItem);
 },
 
 //设置继电器映射
 sendMappingMsg(){
-    console.log('点击继电器映射设置');
-    var that = this ;
-    var eightInput = that.data.eightInput;
-    var sevenInput=that.data.sevenInput;
-    var sixInput=that.data.sixInput;
-    var fiftyInput=that.data.fiftyInput;
-    var fourInput=that.data.fourInput;
-    var threeInput=that.data.threeInput;
-    var twoInput=that.data.twoInput;
-    var oneInput=that.data.oneInput;
-    
-    
+  console.log('点击继电器映射设置');
+  var that = this ;
+  mappingindex = 0
+  mappingList = []
+  var eightInput = that.data.eightInput;
+  var sevenInput=that.data.sevenInput;
+  var sixInput=that.data.sixInput;
+  var fiftyInput=that.data.fiftyInput;
+  var fourInput=that.data.fourInput;
+  var threeInput=that.data.threeInput;
+  var twoInput=that.data.twoInput;
+  var oneInput=that.data.oneInput;
+  
+  
 
-    if((oneInput!=''||oneInput!="")&&!that.data.isOneInput){
-      var floorNumber = parseInt(oneInput);
-      if(floorNumber<128&&floorNumber>0||floorNumber<0&&floorNumber>-11){
-          var relayID = (that.data.rGroupArray[that.data.rIndex].id-1)*8;
-          var needCard = that.data.oGroupArray[that.data.oIndex].id ;
-          console.log('楼层：'+floorNumber+" "+'映射ID:'+relayID+" "+'刷卡方式：'+needCard);
-          var mappingItem = new Object()
-          mappingItem.floorNumber = floorNumber
-          mappingItem.relayID = relayID
-          mappingItem.needCard = needCard
-          mappingList.push(mappingItem)
-      }
+  if((oneInput!=''||oneInput!="")&&!that.data.isOneInput){
+    var floorNumber = parseInt(oneInput);
+    if(floorNumber<128&&floorNumber>0||floorNumber<0&&floorNumber>-11){
+        var relayID = (that.data.rGroupArray[that.data.rIndex].id-1)*8;
+        var needCard = that.data.oGroupArray[that.data.oIndex].id ;
+        console.log('楼层：'+floorNumber+" "+'映射ID:'+relayID+" "+'刷卡方式：'+needCard);
+        var mappingItem = new Object()
+        mappingItem.floorNumber = floorNumber
+        mappingItem.relayID = relayID
+        mappingItem.needCard = needCard
+        mappingList.push(mappingItem)
     }
+  }
 
-    if((twoInput!=''||twoInput!="")&&!that.data.isTwoInput){
-      var floorNumber = parseInt(twoInput);
-      if(floorNumber<128&&floorNumber>0||floorNumber<0&&floorNumber>-11){
-          var relayID = (that.data.rGroupArray[that.data.rIndex].id-1)*8+1;
-          var needCard = that.data.oGroupArray[that.data.oIndex].id ;
-          console.log('楼层：'+floorNumber+" "+'映射ID:'+relayID+" "+'刷卡方式：'+needCard);
-          var mappingItem = new Object()
-          mappingItem.floorNumber = floorNumber
-          mappingItem.relayID = relayID
-          mappingItem.needCard = needCard
-          mappingList.push(mappingItem)
-      }
+  if((twoInput!=''||twoInput!="")&&!that.data.isTwoInput){
+    var floorNumber = parseInt(twoInput);
+    if(floorNumber<128&&floorNumber>0||floorNumber<0&&floorNumber>-11){
+        var relayID = (that.data.rGroupArray[that.data.rIndex].id-1)*8+1;
+        var needCard = that.data.oGroupArray[that.data.oIndex].id ;
+        console.log('楼层：'+floorNumber+" "+'映射ID:'+relayID+" "+'刷卡方式：'+needCard);
+        var mappingItem = new Object()
+        mappingItem.floorNumber = floorNumber
+        mappingItem.relayID = relayID
+        mappingItem.needCard = needCard
+        mappingList.push(mappingItem)
     }
+  }
 
-    if((threeInput!=''||threeInput!="")&&!that.data.isThreeInput){
-      var floorNumber = parseInt(threeInput);
-      if(floorNumber<128&&floorNumber>0||floorNumber<0&&floorNumber>-11){
-          var relayID = (that.data.rGroupArray[that.data.rIndex].id-1)*8+2;
-          var needCard = that.data.oGroupArray[that.data.oIndex].id ;
-          console.log('楼层：'+floorNumber+" "+'映射ID:'+relayID+" "+'刷卡方式：'+needCard);
-          var mappingItem = new Object()
-          mappingItem.floorNumber = floorNumber
-          mappingItem.relayID = relayID
-          mappingItem.needCard = needCard
-          mappingList.push(mappingItem)
-      }
+  if((threeInput!=''||threeInput!="")&&!that.data.isThreeInput){
+    var floorNumber = parseInt(threeInput);
+    if(floorNumber<128&&floorNumber>0||floorNumber<0&&floorNumber>-11){
+        var relayID = (that.data.rGroupArray[that.data.rIndex].id-1)*8+2;
+        var needCard = that.data.oGroupArray[that.data.oIndex].id ;
+        console.log('楼层：'+floorNumber+" "+'映射ID:'+relayID+" "+'刷卡方式：'+needCard);
+        var mappingItem = new Object()
+        mappingItem.floorNumber = floorNumber
+        mappingItem.relayID = relayID
+        mappingItem.needCard = needCard
+        mappingList.push(mappingItem)
     }
-    if((fourInput!=''||fourInput!="")&&!that.data.isFourInput){
-      var floorNumber = parseInt(fourInput);
-      if(floorNumber<128&&floorNumber>0||floorNumber<0&&floorNumber>-11){
-          var relayID = (that.data.rGroupArray[that.data.rIndex].id-1)*8+3;
-          var needCard = that.data.oGroupArray[that.data.oIndex].id ;
-          console.log('楼层：'+floorNumber+" "+'映射ID:'+relayID+" "+'刷卡方式：'+needCard);
-          var mappingItem = new Object()
-          mappingItem.floorNumber = floorNumber
-          mappingItem.relayID = relayID
-          mappingItem.needCard = needCard
-          mappingList.push(mappingItem)
-      }
+  }
+  if((fourInput!=''||fourInput!="")&&!that.data.isFourInput){
+    var floorNumber = parseInt(fourInput);
+    if(floorNumber<128&&floorNumber>0||floorNumber<0&&floorNumber>-11){
+        var relayID = (that.data.rGroupArray[that.data.rIndex].id-1)*8+3;
+        var needCard = that.data.oGroupArray[that.data.oIndex].id ;
+        console.log('楼层：'+floorNumber+" "+'映射ID:'+relayID+" "+'刷卡方式：'+needCard);
+        var mappingItem = new Object()
+        mappingItem.floorNumber = floorNumber
+        mappingItem.relayID = relayID
+        mappingItem.needCard = needCard
+        mappingList.push(mappingItem)
     }
+  }
 
-    if((fiftyInput!=''||fiftyInput!="")&&!that.data.isFiftyInput){
-      var floorNumber = parseInt(fiftyInput);
-      if(floorNumber<128&&floorNumber>0||floorNumber<0&&floorNumber>-11){
-          var relayID = (that.data.rGroupArray[that.data.rIndex].id-1)*8+4;
-          var needCard = that.data.oGroupArray[that.data.oIndex].id ;
-          console.log('楼层：'+floorNumber+" "+'映射ID:'+relayID+" "+'刷卡方式：'+needCard);
-          var mappingItem = new Object()
-          mappingItem.floorNumber = floorNumber
-          mappingItem.relayID = relayID
-          mappingItem.needCard = needCard
-          mappingList.push(mappingItem)
-      }
+  if((fiftyInput!=''||fiftyInput!="")&&!that.data.isFiftyInput){
+    var floorNumber = parseInt(fiftyInput);
+    if(floorNumber<128&&floorNumber>0||floorNumber<0&&floorNumber>-11){
+        var relayID = (that.data.rGroupArray[that.data.rIndex].id-1)*8+4;
+        var needCard = that.data.oGroupArray[that.data.oIndex].id ;
+        console.log('楼层：'+floorNumber+" "+'映射ID:'+relayID+" "+'刷卡方式：'+needCard);
+        var mappingItem = new Object()
+        mappingItem.floorNumber = floorNumber
+        mappingItem.relayID = relayID
+        mappingItem.needCard = needCard
+        mappingList.push(mappingItem)
     }
+  }
 
-    if((sixInput!=''||sixInput!="")&&!that.data.isSixInput){
-      var floorNumber = parseInt(sixInput);
-      if(floorNumber<128&&floorNumber>0||floorNumber<0&&floorNumber>-11){
-          var relayID = (that.data.rGroupArray[that.data.rIndex].id-1)*8+5;
-          var needCard = that.data.oGroupArray[that.data.oIndex].id ;
-          console.log('楼层：'+floorNumber+" "+'映射ID:'+relayID+" "+'刷卡方式：'+needCard);
-          var mappingItem = new Object()
-          mappingItem.floorNumber = floorNumber
-          mappingItem.relayID = relayID
-          mappingItem.needCard = needCard
-          mappingList.push(mappingItem)
-      }
+  if((sixInput!=''||sixInput!="")&&!that.data.isSixInput){
+    var floorNumber = parseInt(sixInput);
+    if(floorNumber<128&&floorNumber>0||floorNumber<0&&floorNumber>-11){
+        var relayID = (that.data.rGroupArray[that.data.rIndex].id-1)*8+5;
+        var needCard = that.data.oGroupArray[that.data.oIndex].id ;
+        console.log('楼层：'+floorNumber+" "+'映射ID:'+relayID+" "+'刷卡方式：'+needCard);
+        var mappingItem = new Object()
+        mappingItem.floorNumber = floorNumber
+        mappingItem.relayID = relayID
+        mappingItem.needCard = needCard
+        mappingList.push(mappingItem)
     }
+  }
 
-    if((sevenInput!=''||sevenInput!="")&&!that.data.isSevenInput){
-      var floorNumber = parseInt(sevenInput);
-      if(floorNumber<128&&floorNumber>0||floorNumber<0&&floorNumber>-11){
-          var relayID = (that.data.rGroupArray[that.data.rIndex].id-1)*8+6;
-          var needCard = that.data.oGroupArray[that.data.oIndex].id ;
-          console.log('楼层：'+floorNumber+" "+'映射ID:'+relayID+" "+'刷卡方式：'+needCard);
-          var mappingItem = new Object()
-          mappingItem.floorNumber = floorNumber
-          mappingItem.relayID = relayID
-          mappingItem.needCard = needCard
-          mappingList.push(mappingItem)
-      }
+  if((sevenInput!=''||sevenInput!="")&&!that.data.isSevenInput){
+    var floorNumber = parseInt(sevenInput);
+    if(floorNumber<128&&floorNumber>0||floorNumber<0&&floorNumber>-11){
+        var relayID = (that.data.rGroupArray[that.data.rIndex].id-1)*8+6;
+        var needCard = that.data.oGroupArray[that.data.oIndex].id ;
+        console.log('楼层：'+floorNumber+" "+'映射ID:'+relayID+" "+'刷卡方式：'+needCard);
+        var mappingItem = new Object()
+        mappingItem.floorNumber = floorNumber
+        mappingItem.relayID = relayID
+        mappingItem.needCard = needCard
+        mappingList.push(mappingItem)
     }
+  }
 
 
-    if((eightInput!=''||eightInput!="")&&!that.data.isEightInput){
-      var floorNumber = parseInt(eightInput);
-      if(floorNumber<128&&floorNumber>0||floorNumber<0&&floorNumber>-11){
-          var relayID = (that.data.rGroupArray[that.data.rIndex].id-1)*8+7;
-          var needCard = that.data.oGroupArray[that.data.oIndex].id ;
-          console.log('楼层：'+floorNumber+" "+'映射ID:'+relayID+" "+'刷卡方式：'+needCard);
-          var mappingItem = new Object()
-          mappingItem.floorNumber = floorNumber
-          mappingItem.relayID = relayID
-          mappingItem.needCard = needCard
-          mappingList.push(mappingItem)
-      }
+  if((eightInput!=''||eightInput!="")&&!that.data.isEightInput){
+    var floorNumber = parseInt(eightInput);
+    if(floorNumber<128&&floorNumber>0||floorNumber<0&&floorNumber>-11){
+        var relayID = (that.data.rGroupArray[that.data.rIndex].id-1)*8+7;
+        var needCard = that.data.oGroupArray[that.data.oIndex].id ;
+        console.log('楼层：'+floorNumber+" "+'映射ID:'+relayID+" "+'刷卡方式：'+needCard);
+        var mappingItem = new Object()
+        mappingItem.floorNumber = floorNumber
+        mappingItem.relayID = relayID
+        mappingItem.needCard = needCard
+        mappingList.push(mappingItem)
     }
-    console.log("要映射的数据")
-    console.log(mappingList)
-    if(that.data.isOneInput&&that.data.isTwoInput&&that.data.isThreeInput&&that.data.isFourInput&&that.data.isFiftyInput&&that.data.isSixInput&&that.data.isSevenInput&&that.data.isEightInput){
-      app.showModal('设置已全部映射');
-    }
+  }
+  console.log("要映射的数据")
+  console.log(mappingList)
+  if(that.data.isOneInput&&that.data.isTwoInput&&that.data.isThreeInput&&that.data.isFourInput&&that.data.isFiftyInput&&that.data.isSixInput&&that.data.isSevenInput&&that.data.isEightInput){
+    app.showModal('设置已全部映射');
+  }
 
-    if(that.data.oneInput==''&&that.data.twoInput==''&&that.data.threeInput==''&&that.data.fourInput==''&&that.data.fiftyInput==''&&that.data.sixInput==''&&that.data.sevenInput==''&&that.data.eightInput==''){
-      app.showModal('设置输入为空');
-    }
-    that.mappingByOrder()
-    setTimeout(that.clearAll,3000);
-  },
+  if(that.data.oneInput==''&&that.data.twoInput==''&&that.data.threeInput==''&&that.data.fourInput==''&&that.data.fiftyInput==''&&that.data.sixInput==''&&that.data.sevenInput==''&&that.data.eightInput==''){
+    app.showModal('设置输入为空');
+  }
+  that.mappingByOrder()
 
-  clearAll(){
-    var that = this ;
-    mappingindex = 0;
-    mappingList = [];
-    that.setData({
-      oneInput:'',
-      twoInput:'',
-      threeInput:'',
-      fourInput:'',
-      fiftyInput:'',
-      sixInput:'',
-      sevenInput:'',
-      eightInput:''
-    })
-  },
+},
+
+clearAll(){
+  mappingindex = 0;
+  mappingList = [];
+},
+
+
   onUnload(){
     var pages = getCurrentPages();
     var prevPage = pages[pages.length - 2];

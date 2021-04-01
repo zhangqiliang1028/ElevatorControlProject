@@ -72,6 +72,7 @@ Page({
 
   isLink(){
     var isLink = wx.getStorageSync('isLink');
+    var elevatorId = wx.getStorageSync('elevatorId');
     console.log(isLink==1);
     if(isLink){
       wx.showToast({
@@ -86,7 +87,8 @@ Page({
       var pages = getCurrentPages();
       var prevPage = pages[pages.length - 2];
       prevPage.setData({
-        isLink: true 
+        isLink: true,
+        elevatorId:elevatorId
       })
       wx.navigateBack({
         delta: 1,

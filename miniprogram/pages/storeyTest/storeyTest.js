@@ -1,4 +1,3 @@
-const { saveDataToCloud } = require("../../utils/util.js");
 const utils = require("../../utils/util.js");
 
 const app = getApp()
@@ -54,14 +53,18 @@ storeyTest(){
 })
 
   var floorNumber = that.data.payloadTestSwitch.floorNumber;
-  if(floorNumber<128&&floorNumber>0||floorNumber<0&&floorNumber>-10){
+  if(floorNumber<128&&floorNumber>0||floorNumber<0&&floorNumber>=-10){
       var info ={
       elevatorId : 0x0,
       robotId : 0x0
     }
+
+    console.log("data[3]:"+(((floorNumber+ 256) % 256) & 0xff));
+    console.log("data[2]:"+(floorNumber + 256)%256)
+
     if(floorNumber < 0){
       that.setData({
-        'payloadTestSwitch.data[3]': ((floorNumber+ 256) % 256) & 0xff,
+        'payloadTestSwitch.data[3]': 0xff,
         'payloadTestSwitch.data[2]': (floorNumber + 256)%256
       })
     }else{
@@ -71,13 +74,10 @@ storeyTest(){
       })
     }
     
-    // var elevatorId =parseInt(wx.getStorageSync('elevatorId'),16);
-
     info.elevatorId = elevatorId
     console.log( +info.elevatorId);
     info.robotId = ROBOTID
     console.log('测试楼层');
-    saveDataToCloud(floorNumber.toString())
     var deviceId = wx.getStorageSync('deviceId');
     var serviceId = wx.getStorageSync('serviceId');
     var writeCharacteristicId = wx.getStorageSync('writeCharacteristicId')
@@ -92,7 +92,6 @@ testOpenDoor(){
   console.log("测试开门")
   var that = this ;
   var elevatorId =that.data.elevatorId;
-  var floorNumber = 0
   var info ={
     elevatorId : 0x0,
     robotId : 0x0
@@ -105,7 +104,7 @@ testOpenDoor(){
   console.log( +info.elevatorId);
   info.robotId = ROBOTID
   console.log('测试楼层');
-  saveDataToCloud(floorNumber.toString())
+
   var deviceId = wx.getStorageSync('deviceId');
   var serviceId = wx.getStorageSync('serviceId');
   var writeCharacteristicId = wx.getStorageSync('writeCharacteristicId')
@@ -147,6 +146,7 @@ getInput(e){
   })
   console.log(this.data.payloadTestSwitch.floorNumber);
 },
+
 //接收到查询楼层信息后显示查询的楼层信息
 setQueryFloorNumber(number,state){
   console.log("查询楼层in test页面" + number)
@@ -156,12 +156,13 @@ setQueryFloorNumber(number,state){
     'runningState' : stateStr
   })
 },
+
 onUnload(){
   var pages = getCurrentPages();
   var prevPage = pages[pages.length - 2];
   prevPage.setData({
     storeyTestDisable: true 
   })
-}
+},
 
 })

@@ -1,4 +1,4 @@
-// miniprogram/pages/registered/registered.js
+
 Page({
 
   /**

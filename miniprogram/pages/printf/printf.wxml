@@ -1,11 +1,14 @@
 <view class="page">
   <view class="top">
     <view class="left">程序输出</view>
-    <view class="right" bindtap="clearTap" hover-class="bindtap">清除</view>
+    <view class="right" bindtap="clearTap" hover-class="bindtap">
+     <text decode="{{true}}">&nbsp;&nbsp;&nbsp;&nbsp;清除</text>
+    </view>
   </view>
   <view class="content">
     <scroll-view class="printf" wx:for-items="{{logs}}" wx:key="id">
-      <view class="printf-content">{{item.date}}>{{item.data}}</view>
+      <!-- <view class="printf-content">{{item.date}}>{{item.data}}</view> -->
+       <view class="printf-content">{{item.data}}</view>
     </scroll-view>
   </view>
 </view>

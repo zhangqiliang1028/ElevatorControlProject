@@ -1,6 +1,7 @@
 <view class="page">
   <!-- 登录界面 -->
   <view class="login-content" wx:if="{{isLogin}}">
+  <view class="tip">卡高智能梯控配置小程序</view>
     <view class="login-input">
       <image src="../../images/account.png"></image>
       <input type="text" placeholder="请输入账号" bindinput="getAccount"/>
@@ -11,15 +12,6 @@
     </view>
     <button style="background: linear-gradient(to right, #66ded0, #229dfe);color:white;" class="login-sureBtn"
       bindtap="login" hover-class="bindtap">立即登录</button>
-    <view class="login-line">-----其他-----</view>
-    <view class="othrLogin">
-      <button  open-type="getUserInfo" bindgetuserinfo="wechatLogin" style="width: 180rpx;height: 120rpx;" class="wechat">
-         <image src="../../images/wechat.png"  class="wechat-img"></image>
-      </button>
-      
-      <!-- 注册 -->
-      <!-- <image src="../../images/registered.png" bindtap="registered" class="login-img"></image> -->
-    </view>
   </view>
 
   <scroll-view class="portConfig" scroll-y="ture" wx:if="{{!isLink&&!isLogin}}">

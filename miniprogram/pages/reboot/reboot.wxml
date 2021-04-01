@@ -3,8 +3,10 @@
     <view class="reboot-content">
       <view class="reboot-title">重启桥厢顶设备</view>
       <view class="reboot-tip">
-        <image src="../../images/no-reboot.png"></image>
-        <view>未重启</view>
+        <image wx:if="{{ !isTop }}" src="../../images/no-reboot.png"></image>
+        <image wx:if="{{ isTop}}" src="../../images/yes-reboot.png"></image>
+        <view wx:if="{{ !isTop }}">未重启</view>
+        <view wx:if="{{ isTop}}">重启成功</view>
       </view>
       <button style="background: linear-gradient(to right, #66ded0, #229dfe);color:white;" class="sureBtn"
         bindtap="rebootTop" hover-class="bindtap">重启</button>
@@ -13,8 +15,10 @@
     <view class="reboot-content">
       <view class="reboot-title">重启梯井顶设备</view>
       <view class="reboot-tip">
-        <image src="../../images/no-reboot.png"></image>
-        <view>未重启</view>
+        <image wx:if="{{!isBottom}}" src="../../images/no-reboot.png"></image>
+        <image wx:if="{{isBottom}}" src="../../images/yes-reboot.png"></image>
+        <view wx:if="{{!isBottom}}">未重启</view>
+        <view wx:if="{{isBottom}}">重启成功</view>
       </view>
       <button style="background: linear-gradient(to right, #66ded0, #229dfe);color:white;" class="sureBtn"
         bindtap="rebootButtom" hover-class="bindtap">重启</button>

@@ -1,6 +1,7 @@
 const Decoder = require("Decoder.js");
 
 
+
 // 字符串转byte
 const CRC_HEAD = 18
 
@@ -24,8 +25,9 @@ const FloorSetting = {
   SET_TIMEDATE : 0xE6, //设置时间
   SET_TOLE : 0xE8, //设置容差
   TEST_SWITCH : 0xE5, //测试继电器
-
+  REBOOT_ACK : 0xEC,	//重启命令；
 }
+
 
 const RobotCmd = {
   ROBOT_QUERY : 0xA0,
@@ -39,6 +41,9 @@ const RobotCmd = {
 
 var recvData = ""
 var flagRemain = false
+
+//存储是否重置成功
+var isReBoot = false
 
 function stringToBytes(str) {
   var strArray = new Uint8Array(str.length/2);
@@ -61,8 +66,6 @@ function stringToBytes(str) {
 
 // ArrayBuffer转16进制字符串示例
 function ab2hext(buffer) {
-
-
   var hexArr = Array.prototype.map.call(
     new Uint8Array(buffer),
     function (bit) {
@@ -241,13 +244,22 @@ function notifyBLECharacteristicValueChange(deviceId,serviceId,notifyCharacteris
       that.onBLECharacteristicValueChange();   //监听特征值变化
     },
     fail: function (res) {
-      wx.showToast({
-        title: 'notify启动失败',
-        mask: true
-      });
-      setTimeout(function () {
-        wx.hideToast();
-      }, 2000)
+      if(res.errCode===10006){
+        wx.showToast({
+          title: '当前蓝牙已断开，请关闭后再尝试',
+          icon:'none',
+          duration:2000
+        })
+      }else{
+        wx.showToast({
+          title: 'notify启动失败',
+          mask: true
+        });
+        setTimeout(function () {
+          wx.hideToast();
+        }, 2000)
+      }
+      
     }
   })
 }
@@ -256,10 +268,10 @@ function notifyBLECharacteristicValueChange(deviceId,serviceId,notifyCharacteris
  function onBLECharacteristicValueChange(){
    var that = this;
   wx.onBLECharacteristicValueChange(function (res) {
-
     var resValue = that.ab2hext(res.value); //16进制字符串
     var strprint = Decoder.GBKHexstrToString(resValue)
     console.log(strprint)
+    that.saveDataToCloud(strprint);
     
     var resValueStr = that.hexToString(resValue);
     var msg = analysis(resValueStr)
@@ -271,7 +283,9 @@ function notifyBLECharacteristicValueChange(deviceId,serviceId,notifyCharacteris
     if(msg.length >= 20){
       onReceivedMsg(msg)
     }
+    
   });
+
 }
 
 //在这里将消息中有用的部分提取出来
@@ -322,7 +336,6 @@ function analysis(valueStr){
         console.log("准备拼接数据")
         //将上一个数据包中的源数据和该数据包中的源数据进行拼接
         recvData += valueStr.substr(start,mend - start + 1)
-
         return recvData
       }
   }
@@ -369,9 +382,11 @@ function onReceivedMsg(msg){
   console.log(msgHead[17])
   console.log(msgHead[16])
   console.log(payloadLength)
+
   if(payloadLength != (msg.length - 40) / 2){
     console.log("消息未接受完整 :" + payloadLength + " " + msg.length) 
   }
+
   if(msgHead[0] != 0x1E || msgHead[1] != 0x1F){
     console.log("Head1 或者 Head2 错误")
   }else{
@@ -385,6 +400,7 @@ function onReceivedMsg(msg){
       for(var i = 0;i < payloadLength;++i){
         payload[i] = parseInt(msg.substr(40 + i*2 , 2),16)
       }
+
       if(computePayloadCRC(payload,payloadLength) != msgHead[19]){
         console.log("负载CRC校验错误")
       }else{
@@ -393,8 +409,17 @@ function onReceivedMsg(msg){
           case FloorSetting.SET_TIMEDATE:{
             if(result){
               console.log("时间设置成功")
+              wx.showToast({
+                title: '时间设置成功',
+                icon:'success',
+                duration : 1000
+              })
             }else{
               console.log("时间设置失败")
+              wx.showToast({
+                title: '时间设置失败',
+                duration : 1000
+              })
             }
             break
           }
@@ -414,22 +439,7 @@ function onReceivedMsg(msg){
             }
             break
           }
-          case FloorSetting.SET_ONE_FLOOR:{
-            if(result){
-              console.log("映射成功")
-              var pages = getCurrentPages()
-              if(pages[pages.length - 1].mappingByOrder() != undefined){
-                pages[pages.length - 1].mappingByOrder()
-              }
-            }else{
-              console.log("映射失败")
-              wx.showToast({
-                title: '映射失败',
-                duration : 1000
-              })
-            }
-            break
-          }
+        
           case FloorSetting.CLEAN_ALL_FLOORS : {
             //重置轿厢板
             if(payload[2]){
@@ -452,13 +462,13 @@ function onReceivedMsg(msg){
             if(payload[0]){
               console.log("设置容差参数成功")
               wx.showToast({
-                title: '设置容差参数成功',
+                title: '设置容成功',
                 duration : 1000
               })
             }else {
               console.log("设置容差参数失败")
               wx.showToast({
-                title: '设置容差参数失败',
+                title: '设置失败',
                 duration : 1000
               })
             }
@@ -605,6 +615,7 @@ function onReceivedMsg(msg){
 //对查询到的梯控所有信息进行解析
 function callBackGetAllInfo(payload){
   console.log("接受到所有的信息")
+  console.log(payload)
   if(payload.length < 2){
     console.log("payload接受失败")
     return
@@ -622,7 +633,8 @@ function callBackGetAllInfo(payload){
       return
     }
   }
-  if(payload.length != 72){
+  
+  if(payload.length < 70){
     console.log("未接受到所有的信息")
     return
   }
@@ -672,47 +684,27 @@ function callBackGetAllInfo(payload){
   console.log("**********************************************************************")
   console.log("查询到如下信息: ")
   console.log("Version :" + mainVer.toString())
-  saveDataToCloud(mainVer.toString());
   console.log("subVer :" + subVer.toString())
-  saveDataToCloud(subVer.toString())
   console.log("stageVer :" + stageVer.toString())
-  saveDataToCloud(stageVer.toString())
   console.log("* AddrL : " + loraL.toString(16))
-  saveDataToCloud(loraL.toString(16))
   console.log("* AddrH : " + loraH.toString(16))
-  saveDataToCloud(loraH.toString(16))
   console.log("* AddrC : " + loraC.toString(16))
-  saveDataToCloud(loraC.toString(16))
   console.log("* ElevatorID : " + elevatorID.toString(16))
-  saveDataToCloud(elevatorID.toString(16))
+  console.log("电梯状态：elevatorStatus：" + elevatorStatus )
   console.log("梯控下面的四个机器人  : ")
-  // saveDataToCloud("梯控下面的四个机器人  : ")
   console.log("Robot1 : " + robot1.toString(16) + " 低地址 ：" + robot1loraL.toString(16)  + " 高地址 ：" + robot1loraH.toString(16) + " 信道 ：" + robot1loraC.toString(16))
-  saveDataToCloud(robot1.toString(16) + " " + robot1loraL.toString(16)  + " " + robot1loraH.toString(16) + " " + robot1loraC.toString(16))
   console.log("Robot2 : " + robot2.toString(16) + " 低地址 ：" + robot2loraL.toString(16)  + " 高地址 ：" + robot2loraH.toString(16) + " 信道 ：" + robot2loraC.toString(16))
-  saveDataToCloud(" " + robot2.toString(16) + " " + robot2loraL.toString(16)  + " " + robot2loraH.toString(16) + " " + robot2loraC.toString(16))
   console.log("Robot3 : " + robot3.toString(16) + " 低地址 ：" + robot3loraL.toString(16)  + " 高地址 ：" + robot3loraH.toString(16) + " 信道 ：" + robot3loraC.toString(16))
-  saveDataToCloud(" " + robot3.toString(16) + " " + robot3loraL.toString(16)  + " " + robot3loraH.toString(16) + " " + robot3loraC.toString(16))
   console.log("Robot4 : " + robot4.toString(16) + " 低地址 ：" + robot4loraL.toString(16)  + " 高地址 ：" + robot4loraH.toString(16) + " 信道 ：" + robot4loraC.toString(16))
-  saveDataToCloud(" " + robot4.toString(16) + " " + robot4loraL.toString(16)  + " " + robot4loraH.toString(16) + " " + robot4loraC.toString(16))
   console.log("时间参数：")
-  // saveDataToCloud("时间参数：")
   console.log("btnRepush : " + btnRepush.toString(16) + "btnDown : " + btnDown.toString(16))
-  saveDataToCloud(" " + btnRepush.toString(16) + " " + btnDown.toString(16))
   console.log("tellRobot : " + tellRobot.toString(16) + "doorOpen : " + doorOpen.toString(16))
-  saveDataToCloud(" " + tellRobot.toString(16) + " " + doorOpen.toString(16))
   console.log("report2Cloud : " + report2Cloud.toString(16) + "disUpdate : " + disUpdate.toString(16))
-  saveDataToCloud(" " + report2Cloud.toString(16) + " " + disUpdate.toString(16))
   console.log("waiting : " + waiting.toString(16) + "keepAlive : " + keepAlive.toString(16))
-  saveDataToCloud(" " + waiting.toString(16) + " " + keepAlive.toString(16))
   console.log("平层参数：")
-  // saveDataToCloud("平层参数：")
   console.log("checkCount : " + checkCount.toString(16))
-  saveDataToCloud(" " + checkCount.toString(16))
   console.log("toleDistance : " + toleDistance.toString(16))
-  saveDataToCloud(" " + toleDistance.toString(16))
   console.log("checkFlatTime : " + checkFlatTime.toString(16))
-  saveDataToCloud(" " + checkFlatTime.toString(16))
   console.log("**********************************************************************")
 
     //验证输入的电梯ID是否正确
@@ -722,6 +714,7 @@ function callBackGetAllInfo(payload){
   if(elevatorId.toString(16)===elevatorID.toString(16)||elevatorID===elevatorId){
       console.log('查询到该电梯')
       isLink = true;
+      wx.setStorageSync('elevatorId', elevatorId)
   }
   wx.setStorageSync('isLink', isLink)
 }
@@ -770,6 +763,19 @@ function writeBLECharacteristicValue(deviceId,serviceId,writeCharacteristicId,in
       fail: function (res) {
         var log ="写入失败" + res.errMsg+"\n";
         console.log(log);
+        if(res.errCode===10006){
+          wx.showToast({
+            title: '当前连接已断开',
+            icon:'none',
+            duration:2000
+          })
+        }else{
+          wx.showToast({
+            title: '数据写入失败',
+            icon:'none',
+            duration:2000
+          })
+        }
       }
     })
     
@@ -799,33 +805,51 @@ console.log(currentDate);
 
 //清除日志数据
 function clearDataFormCloud(){
-  // wx.cloud.callFunction({
-  //   name: 'clearDataFormCloud',    // 需调用的云函数名,注意名称要相同
-  //   // 成功回调
-  //   success: res => {
-  //     console.log("清除日志文件");
-  //   },
-  //   fail: err => {
-  //     console.error('[云函数] [clearDataFormCloud] 调用失败', err)
-  //   }
-  // })
-
-  const  db = wx.cloud.database();
-  // console.log(db)
-  db.collection('logs').get().then(res => {
-    console.log(res.data);
-    for(let i=0;i<res.data.length;i++){
-      db.collection('logs').doc(res.data[i]._id).remove();
+  wx.request({
+    url: 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=wxb67b23a24ceb75e5&secret=c32834cdee9f035e20cf66cb99acddee',
+    success(res){
+      //删除集合
+      wx.request({
+        url: 'https://api.weixin.qq.com/tcb/databasecollectiondelete?access_token='+res.data.access_token, //仅为示例，并非真实的接口地址
+        data: {
+          env: 'offer-123',
+          collection_name: 'logs'
+        },
+        method:'POST',
+        header: {
+          'content-type': 'application/json' // 默认值
+        },
+        success (e) {
+            console.log(e.data)
+            //创建集合
+            wx.request({
+              url: 'https://api.weixin.qq.com/tcb/databasecollectionadd?access_token='+res.data.access_token, //仅为示例，并非真实的接口地址
+              data: {
+                env: 'offer-123',
+                collection_name: 'logs'
+              },
+              method:'POST',
+              header: {
+                'content-type': 'application/json' // 默认值
+              },
+              success (res) {
+                console.log(res.data)
+              }
+            })
+        }
+      })
     }
   })
 }
-
 
 
 module.exports = {
   stringToBytes: stringToBytes,
   ab2hext: ab2hext,
   hexToString: hexToString,
+  analysis:analysis,
+  computeMsgHeadCRC:computeMsgHeadCRC,
+  computePayloadCRC:computePayloadCRC,
   computeRobotMessageCRC:computeRobotMessageCRC,
   getBLEDeviceCharacteristics:getBLEDeviceCharacteristics,
   writeBLECharacteristicValue:writeBLECharacteristicValue,

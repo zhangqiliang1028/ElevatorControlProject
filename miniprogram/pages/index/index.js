@@ -94,7 +94,6 @@ Page({
   login(){
     //清除云端日志记录
     console.log('清除日志数据');
-    utils.clearDataFormCloud();
     var that = this ;
     var userInfo = that.data.userInfo; 
     if(userInfo.account===''){
@@ -171,7 +170,6 @@ Page({
   wechatLogin(){
     var that = this ;
     //清除云端日志记录
-    utils.clearDataFormCloud();
     console.log('微信授权登录');
         // 查看是否授权
         wx.getSetting({
@@ -244,12 +242,6 @@ Page({
 
     //进入页面就加载数据
     onLoad: function () {
-      var elevatorId = wx.getStorageSync('elevatorId');
-      var that = this ;
-      that.setData({
-        elevatorId: elevatorId
-      })
-      console.log(elevatorId) ; 
       //清除云端日志记录
       utils.clearDataFormCloud();
       //清除缓存
@@ -411,10 +403,9 @@ Page({
                         app.showModal1("连接超时,请重试!");
                       } else if (err.errCode === 10013) {
                         app.showModal1("连接失败,蓝牙地址无效!");
-                      } else {
-                        app.showModal1("连接失败,请重试!"); 
                       }
                       console.log('连接失败，断开连接');
+                      app.showModal1("连接失败，正在断开连接");
                       that.closeBLEConnection()
                     }
                   })
@@ -457,7 +448,17 @@ Page({
     //断开与低功耗蓝牙设备的连接
     closeBLEConnection: function() {
       wx.closeBLEConnection({
-        deviceId: this.data.devId
+        deviceId: this.data.isLinkdeviceId,
+        fail:function(err){
+          console.log(err);
+          if(err.errCode === 10006){
+            wx.showToast({
+              title: '请稍后再尝试，当前蓝牙未断开',
+              icon:'none',
+              duration:2000
+            });
+          }
+        }
       })
     },
 
@@ -475,6 +476,7 @@ Page({
     console.log('设置重置 提示弹出框');
     var that = this ;
     var elevatorId = that.data.elevatorId;
+    console.log(elevatorId.toString(16));
       wx.showModal({
         cancelColor: 'blue',
         title:'温馨提示',
@@ -492,6 +494,7 @@ Page({
             }
             
             info.elevatorId = elevatorId;
+            console.log("当前电梯ID为："+elevatorId.toString(16))
             info.robotId = ROBOTID
             var floorNumber = 0
             var relayID = 0
@@ -853,22 +856,22 @@ touchTap:function(){
     }
    },
 
-   //下拉刷新页面操作
-  onPullDownRefresh: function () {
-    console.log('下拉刷新');//设置触发事件时间效果方法
-    setTimeout(()=>{// 在此调取接口
-      wx.showNavigationBarLoading(); // 显示顶部刷新图标
-      wx.redirectTo({
-        url: '../index/index',
-        success:function(res){
-          wx.stopPullDownRefresh({
-            success: (res) => {
-              console.log("刷新成功");
-            },
-          })
-        }
-      })
-    ,1000})
-},
+//    //下拉刷新页面操作
+//   onPullDownRefresh: function () {
+//     console.log('下拉刷新');//设置触发事件时间效果方法
+//     setTimeout(()=>{// 在此调取接口
+//       wx.showNavigationBarLoading(); // 显示顶部刷新图标
+//       wx.redirectTo({
+//         url: '../index/index',
+//         success:function(res){
+//           wx.stopPullDownRefresh({
+//             success: (res) => {
+//               console.log("刷新成功");
+//             },
+//           })
+//         }
+//       })
+//     ,1000})
+// },
 
 })

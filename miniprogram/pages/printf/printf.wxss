@@ -11,6 +11,7 @@ page,.page {
   flex-direction: column;
   align-items: center;
 }
+
 .top{
   width: 100%;
   height: 50rpx;
@@ -23,7 +24,9 @@ page,.page {
   border-top:2rpx solid #fff ;
 
   position: fixed;
+  z-index: 1;
 }
+
 .left{
   width: 70%;
   margin-left: 30rpx;
@@ -32,7 +35,6 @@ page,.page {
 
 .right{
   width: 25%;
-  margin-left: 30rpx;
 }
 
 .content{
@@ -52,7 +54,13 @@ page,.page {
 }
 
 .printf-content{
-  margin-left: 10rpx;
+  border-bottom: 3rpx solid #fff;
+  margin-bottom: 10rpx;
+  display: block;
+  white-space: pre-line;
+  width: 100%;
+  height: auto;
+  font-size: 27rpx;
 }
 
 .bindtap{

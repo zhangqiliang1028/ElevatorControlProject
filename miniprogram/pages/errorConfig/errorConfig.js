@@ -1,5 +1,3 @@
-const app = getApp()
-const { saveDataToCloud } = require("../../utils/util.js");
 const utils = require("../../utils/util.js");
 
 const ROBOTID = 0x1111111
@@ -8,20 +6,14 @@ Page({
   data: {
     rangeError:{
       number:400,//平层距离测定误差
-      minus:'normal',
-      plus:'normal',
       isShow:false
     },
     toleranceTimes:{
       number:5,//测距异常容忍次数
-      minus:'normal',
-      plus:'normal',
       isShow:false
     },
     detectionTime:{
       number:1,//平层异常检测时长
-      minus:'disable',
-      plus:'normal',
       isShow:false
     },
     //容差参数的设置
@@ -66,67 +58,27 @@ Page({
   },
 
 //平层距离测定误差
-  /*点击减号*/
-  bindRangeErrorMinus: function() {
-    var num = this.data.rangeError.number;
-    if (num>1) {
-      num--;
-    }
-    var minus = num>1 ? 'normal':'disable';
-    var plus = num < 3000 ? 'normal' : 'disable';
-    this.setData({
-      'rangeError.number': num,
-      'rangeError.minus':minus,
-      'rangeError.plus': plus
-    })
-  },
-  /*点击加号*/
-  bindRangeErrorPlus: function() {
-    var num = this.data.rangeError.number;
-    if(num<3000){
-       num++;
-    }
-    var minus = num>1 ? 'normal':'disable';
-    var plus = num < 3000 ? 'normal' : 'disable';
-    this.setData({
+  getRangeError(e){
+  var that = this ;
+  var num = parseInt(e.detail.value);
+  that.setData({
       'rangeError.number':num,
-      'rangeError.minus':minus,
-      'rangeError.plus': plus
-    })
-  },
+  })
+},
+
   rangeErrorAbout(){
     var isShow = this.data.rangeError.isShow;
     this.setData({
       'rangeError.isShow':!isShow
     })
   },
+
 //测距异常容忍次数
-  /*点击减号*/
-  bindToleranceTimesMinus: function() {
-    var num = this.data.toleranceTimes.number;
-    if (num>1) {
-      num--;
-    }
-    var minus = num>1 ? 'normal':'disable';
-    var plus = num < 16 ? 'normal' : 'disable';
-    this.setData({
-      'toleranceTimes.number': num,
-      'toleranceTimes.minus':minus,
-      'toleranceTimes.plus': plus
-    })
-  },
-  /*点击加号*/
-  bindToleranceTimesPlus: function() {
-    var num = this.data.toleranceTimes.number;
-    if(num<16){
-       num++;
-    }
-    var minus = num>1 ? 'normal':'disable';
-    var plus = num < 16 ? 'normal' : 'disable';
-    this.setData({
-      'toleranceTimes.number':num,
-      'toleranceTimes.minus':minus,
-      'toleranceTimes.plus': plus
+  getToleranceTime(e){
+    var that = this ;
+    var num = parseInt(e.detail.value);
+    that.setData({
+        'toleranceTimes.number':num,
     })
   },
   toleranceTimesAbout(){
@@ -137,41 +89,22 @@ Page({
   },
 
 
-//平层异常检测时长
- /*点击减号*/
- bindDetectionTimeMinus: function() {
-  var num = this.data.detectionTime.number;
-  if (num>1) {
-    num--;
-  }
-  var minus = num>1 ? 'normal':'disable';
-  var plus = num < 10 ? 'normal' : 'disable';
-  this.setData({
-    'detectionTime.number': num,
-    'detectionTime.minus':minus,
-    'detectionTime.plus': plus
+//获取平层异常检测时长
+getDetecttionTime(e){
+  var that = this ;
+  var num = parseInt(e.detail.value);
+  that.setData({
+      'detectionTime.number':num,
   })
 },
-/*点击加号*/
-bindDetectionTimePlus: function() {
-  var num = this.data.detectionTime.number;
-  if(num<10){
-     num++;
-  }
-  var minus = num>1 ? 'normal':'disable';
-  var plus = num < 10 ? 'normal' : 'disable';
-  this.setData({
-    'detectionTime.number':num,
-    'detectionTime.minus':minus,
-    'detectionTime.plus': plus
-  })
-},
+
 detectionTimeAbout(){
   var isShow = this.data.detectionTime.isShow;
   this.setData({
     'detectionTime.isShow':!isShow
   })
 },
+
 
   errorConfig(){
     console.log('配置平层参数');
@@ -180,6 +113,37 @@ detectionTimeAbout(){
     var info = {
       elevatorId : 0x0,
       robotId : 0x0
+    }
+    var toleranceTimes = that.data.toleranceTimes.number;
+    var rangeError = that.data.rangeError.number;
+    var detectionTime = that.data.detectionTime.number;
+
+    if(rangeError<1||rangeError>3000 || isNaN(rangeError)){
+      console.log("平层距离测定误差输入有误")
+      wx.showToast({
+        title: '平层距离测定误差输入有误',
+        icon:'none',
+        duration:1000
+      })
+      return ;
+    }
+    if(toleranceTimes<1||toleranceTimes>16 || isNaN(toleranceTimes)){
+      console.log("测距异常容忍次数输入有误")
+      wx.showToast({
+        title: '测距异常容忍次数输入有误',
+        icon:'none',
+        duration:1000
+      })
+      return ;
+    }
+    if(detectionTime<1||detectionTime>10 || isNaN(detectionTime)){
+      console.log("平层异常检测时长输入有误")
+      wx.showToast({
+        title: '平层异常检测时长输入有误',
+        icon:'none',
+        duration:1000
+      })
+      return ;
     }
 
     info.elevatorId = elevatorId;
@@ -204,15 +168,7 @@ detectionTimeAbout(){
      var serviceId = wx.getStorageSync('serviceId');
      var writeCharacteristicId = wx.getStorageSync('writeCharacteristicId')
      utils.writeBLECharacteristicValue(deviceId,serviceId,writeCharacteristicId,info,that.data.payloadConfigTole);
-    //  saveDataToCloud("设置容差参数")
-     saveDataToCloud(checkCount)
-     saveDataToCloud(toleDistance)
-     saveDataToCloud(checkFlatFloorTime)
-    wx.showToast({
-      title: '配置成功',
-      icon:'success',
-      duration:15000
-    })
+
   },
 onUnload(){
   var pages = getCurrentPages();
