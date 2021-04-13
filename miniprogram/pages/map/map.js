@@ -143,7 +143,7 @@ onBLECharacteristicValueChange(){
 
     var resValue = utils.ab2hext(res.value); //16进制字符串
     var strprint = Decoder.GBKHexstrToString(resValue)
-    console.log(strprint)
+    console.log('+++',strprint,'+++')
     utils.saveDataToCloud(strprint);
     
     var resValueStr = utils.hexToString(resValue);
@@ -221,7 +221,7 @@ onReceivedMsg(msg){
         console.log("负载CRC校验错误")
       }else{
         var result = payload[2] * 256 + payload[3]
-        if(payload[0] == 0xE1){
+        if(payload[0] == 0xE1){    //循环设置所有楼层映射
           if(result){
             console.log("映射成功")
             wx.showToast({
@@ -230,7 +230,7 @@ onReceivedMsg(msg){
             })
             that.mappingByOrder();
           }else{
-            console.log("映射失败")
+            console.log("映射失败")  //可以设置重新映射选项
             wx.showToast({
               title: '映射失败',
               duration:2000
@@ -437,7 +437,7 @@ mappingByOrder(){
   info.robotId = ROBOTID
   
 
-  if(mappingindex < mappingList.length){
+  if(mappingindex < mappingList.length){  //？？只配置一个继电器
     console.log("配置第" + (mappingindex + 1) + "个继电器")
     this.mappingConfig(info,mappingList[mappingindex].floorNumber,mappingList[mappingindex].relayID,mappingList[mappingindex].needCard)
     that.showRelay(mappingList[mappingindex].relayID);

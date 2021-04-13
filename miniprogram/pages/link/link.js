@@ -85,7 +85,7 @@ Page({
         console.log("电梯连接成功")
       },2000)
       var pages = getCurrentPages();
-      var prevPage = pages[pages.length - 2];
+      var prevPage = pages[pages.length - 2];  //设置其他页面的数据
       prevPage.setData({
         isLink: true,
         elevatorId:elevatorId

@@ -125,6 +125,7 @@ Page({
         //数据库操作
           const  db = wx.cloud.database();
           db.collection('user').get().then(res => {
+            console.log(res.data)
             for(let i=0;i<res.data.length;i++){
               var t = res.data[i].userInfo ; 
               if(t.account===userInfo.account&&t.password===userInfo.password){

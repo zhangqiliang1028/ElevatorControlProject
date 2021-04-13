@@ -267,7 +267,7 @@ function notifyBLECharacteristicValueChange(deviceId,serviceId,notifyCharacteris
  //监听低功耗蓝牙设备的特征值变化。必须先启用notify接口才能接收到设备推送的notification。
  function onBLECharacteristicValueChange(){
    var that = this;
-  wx.onBLECharacteristicValueChange(function (res) {
+  wx.onBLECharacteristicValueChange(function (res) { //接收蓝牙的返回信息
     var resValue = that.ab2hext(res.value); //16进制字符串
     var strprint = Decoder.GBKHexstrToString(resValue)
     console.log(strprint)
@@ -749,7 +749,7 @@ function writeBLECharacteristicValue(deviceId,serviceId,writeCharacteristicId,in
       pos += bytes;
       bytes -= bytes;
     }
-    wx.writeBLECharacteristicValue({
+    wx.writeBLECharacteristicValue({   //发送信息
       deviceId: deviceId,
       serviceId: serviceId,
       characteristicId: writeCharacteristicId,
