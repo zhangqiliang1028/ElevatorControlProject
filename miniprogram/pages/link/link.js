@@ -2,7 +2,7 @@ var app = getApp();
 var utils = require("../../utils/util.js");
 Page({
   data: {
-    orderInput:''
+    orderInput:'',
   },
 
   /**
@@ -18,17 +18,20 @@ Page({
     wx.setStorageSync('deviceId', deviceId);
     wx.setStorageSync('name', name);
     wx.setStorageSync('serviceId', serviceId);
+    var Eid = utils.getElevatorID()
+    this.setData({
+      orderInput:Eid,
+    })
   },
 
 
   //获取输入
   getInput:function(e){
+    var that = this;
     this.setData({
       orderInput: e.detail.value
     })
   },
-
-
   //确定连接
   
   sendLinkMsg(){
@@ -41,7 +44,6 @@ Page({
       return;
     }     
       var elevatorId = parseInt(orderInput,16);
-      console.log('电梯ID：'+elevatorId.toString);
       wx.setStorageSync('elevatorId', elevatorId);
 
     var payload = {

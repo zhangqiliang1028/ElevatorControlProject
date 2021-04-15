@@ -6,7 +6,7 @@ const ROBOTID = 0x11111111
 //用于标识这是映射的第几个继电器
 var mappingindex = 0
 var mappingList = new Array()
-
+var reply_count = 0
 Page({
 
   /**
@@ -52,8 +52,11 @@ Page({
     },
     elevatorId:'',
     //设置是否成功
-    isSuccess:true
-
+    isSuccess:true,
+    singleFloatInfoReplReplied:false,
+    deviceId:0,
+    serviceId:0,
+    writeCharacteristicId:0,
   },
 
   /**
@@ -143,8 +146,8 @@ onBLECharacteristicValueChange(){
 
     var resValue = utils.ab2hext(res.value); //16进制字符串
     var strprint = Decoder.GBKHexstrToString(resValue)
-    console.log('+++',strprint,'+++')
-    utils.saveDataToCloud(strprint);
+    console.log(strprint)
+    //utils.saveDataToCloud(strprint);
     
     var resValueStr = utils.hexToString(resValue);
     var msg = utils.analysis(resValueStr)
@@ -221,7 +224,11 @@ onReceivedMsg(msg){
         console.log("负载CRC校验错误")
       }else{
         var result = payload[2] * 256 + payload[3]
-        if(payload[0] == 0xE1){    //循环设置所有楼层映射
+        if(payload[0] == 0xE1){    //收到楼层映射消息回复
+          this.setData({
+            singleFloatInfoReplReplied:true,
+          })
+            
           if(result){
             console.log("映射成功")
             wx.showToast({
@@ -242,8 +249,6 @@ onReceivedMsg(msg){
   }
 },
 
-
-  
 //picker事件
 bindPickerRChange:function(e){
   var that = this ;
@@ -437,7 +442,7 @@ mappingByOrder(){
   info.robotId = ROBOTID
   
 
-  if(mappingindex < mappingList.length){  //？？只配置一个继电器
+  if(mappingindex < mappingList.length){
     console.log("配置第" + (mappingindex + 1) + "个继电器")
     this.mappingConfig(info,mappingList[mappingindex].floorNumber,mappingList[mappingindex].relayID,mappingList[mappingindex].needCard)
     that.showRelay(mappingList[mappingindex].relayID);
@@ -448,7 +453,7 @@ mappingByOrder(){
       title: '继电器映射完成',
       duration:1000
     })
-    that.clearAll();
+    that.clearAll(); //清除设置的映射数据maplist[]列表
   }
 },
 
@@ -490,15 +495,49 @@ mappingConfig(info,floorNumber,relayID,needCard){
   var deviceId = wx.getStorageSync('deviceId');
   var serviceId = wx.getStorageSync('serviceId');
   var writeCharacteristicId = wx.getStorageSync('writeCharacteristicId');
-  utils.writeBLECharacteristicValue(deviceId,serviceId,writeCharacteristicId,info,that.data.payloadConfigItem);
-},
+  that.setData({
+    singleFloatInfoReplReplied:false,
+    deviceId:deviceId,
+    serviceId:serviceId,
+    writeCharacteristicId:writeCharacteristicId,
+  })
+  reLink_count = 0
+  utils.writeBLECharacteristicValue(deviceId,serviceId,writeCharacteristicId,info,that.data.payloadConfigItem); //传一个楼层的映射数据
+  that.reLink(deviceId,serviceId,writeCharacteristicId,info);
 
+},
+reLink:function(deviceId,serviceId,writeCharacteristicId,info){
+  var that = this;
+  setTimeout(function(){
+    if(!that.data.singleFloatInfoReplReplied && reply_count < 3){
+      reLink_count++;
+      console.log("未收到楼层设置消息回复，重新发送数据")
+      wx.showToast({
+        title: '第'+ reLink_count +'次重新连接...',
+        icon:'loading',
+        duration:2000
+      });
+      utils.writeBLECharacteristicValue(deviceId,serviceId,writeCharacteristicId,info,that.data.payloadConfigItem);
+      that.reLink(deviceId,serviceId,writeCharacteristicId,info)
+    }
+    else if(!that.data.singleFloatInfoReplReplied && reply_count >= 3){
+      wx.showToast({
+        title: '连接失败',
+        icon:'error',
+        duration:2000
+      });
+    }
+  },2000)
+},
 //设置继电器映射
 sendMappingMsg(){
   console.log('点击继电器映射设置');
   var that = this ;
   mappingindex = 0
   mappingList = []
+  this.setData({  //重置回复消息为false
+    singleFloatInfoReplReplied:false,
+  })
   var eightInput = that.data.eightInput;
   var sevenInput=that.data.sevenInput;
   var sixInput=that.data.sixInput;

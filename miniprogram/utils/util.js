@@ -4,7 +4,6 @@ const Decoder = require("Decoder.js");
 
 // 字符串转byte
 const CRC_HEAD = 18
-
 const ElevatorState = {
   NOT_IN_USE : 0xD0, //未使用，空闲状态
   STAGE1 : 0xD1, //正在前往机器人呼叫楼层
@@ -270,18 +269,19 @@ function notifyBLECharacteristicValueChange(deviceId,serviceId,notifyCharacteris
   wx.onBLECharacteristicValueChange(function (res) { //接收蓝牙的返回信息
     var resValue = that.ab2hext(res.value); //16进制字符串
     var strprint = Decoder.GBKHexstrToString(resValue)
+    //console.log('打印信息:'+strprint.length)
     console.log(strprint)
-    that.saveDataToCloud(strprint);
-    
+    getElevatorID(strprint);
+    //that.saveDataToCloud(strprint);
     var resValueStr = that.hexToString(resValue);
     var msg = analysis(resValueStr)
     if(msg == undefined){
-      console.log("非回复消息")
+      console.log("非回复消息") //不用管
       return
     }
 
     if(msg.length >= 20){
-      onReceivedMsg(msg)
+      onReceivedMsg(msg);
     }
     
   });
@@ -341,6 +341,18 @@ function analysis(valueStr){
   }
   
 }
+//在这里对头部消息进行解析提取
+function getElevatorID(msg){
+  console.log("开始解析头部信息")
+  if(msg != undefined && msg.length == 173){
+    for(let i= 111;i >= 104;i--){
+      //console.log(i+': '+(msg[i] == ' '?0:msg[i]))
+      console.log(i+': '+(msg[i]))
+    }
+  }
+  var res = '00290001';
+  return res;
+}
 
 //在这里对消息进行解析
 function onReceivedMsg(msg){
@@ -375,9 +387,7 @@ function onReceivedMsg(msg){
   //构建头部消息
   for(var i = 0;i < 20;++i){
     msgHead[i] = parseInt(msg.substr(i*2,2),16)
-   
   }
-  
   var payloadLength = msgHead[17] * 256 + msgHead[16]
   console.log(msgHead[17])
   console.log(msgHead[16])
@@ -404,6 +414,7 @@ function onReceivedMsg(msg){
       if(computePayloadCRC(payload,payloadLength) != msgHead[19]){
         console.log("负载CRC校验错误")
       }else{
+        callBackGetAllInfo(payload)
         var result = payload[2] * 256 + payload[3]
         switch(payload[0]){
           case FloorSetting.SET_TIMEDATE:{
@@ -725,7 +736,7 @@ function callBackGetAllInfo(payload){
 //注意：必须设备的特征值支持write才可以成功调用，具体参照 characteristic 的 properties 属性
 function writeBLECharacteristicValue(deviceId,serviceId,writeCharacteristicId,info,payloadTestSwitch){
   var that = this ;
-  
+  var res = 1
   //产生传输数据
   var myData = that.productMessage(info,payloadTestSwitch);
   that.computeRobotMessageCRC(myData);
@@ -769,14 +780,15 @@ function writeBLECharacteristicValue(deviceId,serviceId,writeCharacteristicId,in
             icon:'none',
             duration:2000
           })
-        }else{
+        }else {
           wx.showToast({
-            title: '数据写入失败',
+            title: '数据写入失败:'+res.errCode,
             icon:'none',
             duration:2000
           })
         }
-      }
+
+      },
     })
     
   }
@@ -842,7 +854,6 @@ function clearDataFormCloud(){
   })
 }
 
-
 module.exports = {
   stringToBytes: stringToBytes,
   ab2hext: ab2hext,
@@ -858,4 +869,5 @@ module.exports = {
   productMessage:productMessage,
   saveDataToCloud:saveDataToCloud,
   clearDataFormCloud:clearDataFormCloud,
+  getElevatorID:getElevatorID,
 }

@@ -122,6 +122,11 @@ Page({
           duration:2000
         })
       }else{
+        wx.showToast({
+          title: '正在登陆...',
+          icon:'loading',
+          duration:2000
+        })
         //数据库操作
           const  db = wx.cloud.database();
           db.collection('user').get().then(res => {

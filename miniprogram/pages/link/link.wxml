@@ -13,7 +13,7 @@
   <view class="line"></view>
   <view class="row backgrounp-color">
     <text>电梯ID</text>
-    <input type="text" placeholder="请输入电梯ID" bindinput="getInput"/>
+    <input type="text" placeholder="请输入电梯ID" bindinput="getInput" value="{{orderInput}}"/>
   </view>
   <button style="background: linear-gradient(to right, #66ded0, #229dfe);color:white;" class="sureBtn" bindtap="sendLinkMsg" hover-class="bindtap">确定</button>
 </view>
