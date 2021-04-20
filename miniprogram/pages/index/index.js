@@ -234,25 +234,26 @@ Page({
       showDialog: !this.data.showDialog
   })},
 
-    onReady: function() {
-      var that = this;
-      wx.getSystemInfo({
-        success: function(res) {
-          that.setData({
-            winWidth: res.windowWidth,
-            winHeight: res.windowHeight
-          });
-        }
-      });
-    },
+  onReady: function() {
+    var that = this;
+    wx.getSystemInfo({
+      success: function(res) {
+        that.setData({
+          winWidth: res.windowWidth,
+          winHeight: res.windowHeight
+        });
+      }
+    });
+  },
 
-    //进入页面就加载数据
-    onLoad: function () {
-      //清除云端日志记录
-      utils.clearDataFormCloud();
-      //清除缓存
-      wx.clearStorage();
-    },
+  //进入页面就加载数据
+  onLoad: function () {
+    //清除云端日志记录
+    console.log('清除云端日志记录')
+    //utils.clearDataFormCloud();
+    //清除缓存
+    wx.clearStorage();
+  },
 
     //搜索蓝牙设备
     scanBlueTooth: function () {

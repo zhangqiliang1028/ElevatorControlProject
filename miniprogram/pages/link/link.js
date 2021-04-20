@@ -1,5 +1,6 @@
 var app = getApp();
 var utils = require("../../utils/util.js");
+var startTime,date;
 Page({
   data: {
     orderInput:'',
@@ -18,13 +19,44 @@ Page({
     wx.setStorageSync('deviceId', deviceId);
     wx.setStorageSync('name', name);
     wx.setStorageSync('serviceId', serviceId);
-    var Eid = utils.getElevatorID()
-    this.setData({
-      orderInput:Eid,
-    })
+    date = new Date();    
+    startTime = date.getTime()
+    console.log('开始时间：',startTime)
+    this.getElevatorID();
   },
-
-
+  
+  //获取电梯ID
+  getElevatorID:function(){
+    var that = this;
+    wx.showToast({
+      title: '正在获取电梯ID...',
+      icon:'loading',
+      duration:2000
+    });
+    setTimeout(function(){
+      if(utils.getIsSetElevatorID()){
+        that.setData({
+          orderInput:utils.getElevatorID(),
+        })
+      }
+      else{
+        date = new Date();
+        let endTime = date.getTime();
+        console.log(endTime)
+        if(endTime - startTime >= 10000){
+          console.log('获取电梯ID失败');
+          wx.showToast({
+            title: '获取电梯ID失败',
+            icon:'error',
+            duration:2000
+          });
+        }
+        else{
+          that.getElevatorID()
+        }
+      }
+    },1000)
+  },
   //获取输入
   getInput:function(e){
     var that = this;

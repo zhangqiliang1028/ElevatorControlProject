@@ -1,7 +1,14 @@
 const Decoder = require("Decoder.js");
 
 
-
+var isSetElevatorID = false;
+var ElevatorID = ''
+function getIsSetElevatorID(){
+  return isSetElevatorID
+}
+function getElevatorID(){
+  return ElevatorID
+}
 // 字符串转byte
 const CRC_HEAD = 18
 const ElevatorState = {
@@ -269,10 +276,11 @@ function notifyBLECharacteristicValueChange(deviceId,serviceId,notifyCharacteris
   wx.onBLECharacteristicValueChange(function (res) { //接收蓝牙的返回信息
     var resValue = that.ab2hext(res.value); //16进制字符串
     var strprint = Decoder.GBKHexstrToString(resValue)
-    //console.log('打印信息:'+strprint.length)
     console.log(strprint)
-    getElevatorID(strprint);
-    //that.saveDataToCloud(strprint);
+    if(!isSetElevatorID){
+      setElevatorID(strprint);
+    }
+    that.saveDataToCloud(strprint);
     var resValueStr = that.hexToString(resValue);
     var msg = analysis(resValueStr)
     if(msg == undefined){
@@ -342,16 +350,29 @@ function analysis(valueStr){
   
 }
 //在这里对头部消息进行解析提取
-function getElevatorID(msg){
+function setElevatorID(msg){
+  
   console.log("开始解析头部信息")
-  if(msg != undefined && msg.length == 173){
-    for(let i= 111;i >= 104;i--){
-      //console.log(i+': '+(msg[i] == ' '?0:msg[i]))
-      console.log(i+': '+(msg[i]))
+  if(msg != undefined){
+    var strs= new Array(); //定义一数组
+    strs=msg.split(" "); //字符分割
+    var result = '';
+    for(let i=0;i<strs.length;i++){
+      if(strs[i] == '1f' && strs[i-1].substring(strs[i-1].length-2,strs[i-1].length)  == '1e'){
+        for(let j=10;j>=7;j--){
+          if(strs[i+j].length==1){
+            result = result + '0'
+          }
+          result = result.concat(strs[i+j]);
+        }
+        isSetElevatorID = true; 
+        ElevatorID = result;
+        console.log(ElevatorID);
+
+      }
     }
   }
-  var res = '00290001';
-  return res;
+
 }
 
 //在这里对消息进行解析
@@ -799,8 +820,8 @@ function saveDataToCloud(data){
   const  db = wx.cloud.database();
   //获取当前时间
   var date = new Date();
-var currentDate = date.getHours()+"时"+date.getMinutes()+"分"+date.getSeconds()+"秒";
-console.log(currentDate);
+  var currentDate = date.getHours()+"时"+date.getMinutes()+"分"+date.getSeconds()+"秒";
+  console.log(currentDate);
   db.collection('logs').add({
     // data 字段表示需新增的 JSON 数据
     data: {
@@ -817,14 +838,16 @@ console.log(currentDate);
 
 //清除日志数据
 function clearDataFormCloud(){
+  console.log('++++++++++++删除集合+++++++++++++++')
   wx.request({
-    url: 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=wxb67b23a24ceb75e5&secret=c32834cdee9f035e20cf66cb99acddee',
+    url: 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=	wx108345217f87e16e&secret=1928c57419d6eea623391691e9dd46c1', //获取用户凭证
     success(res){
       //删除集合
+      
       wx.request({
         url: 'https://api.weixin.qq.com/tcb/databasecollectiondelete?access_token='+res.data.access_token, //仅为示例，并非真实的接口地址
         data: {
-          env: 'offer-123',
+          env: 'test-5gbxczf0565156d5',
           collection_name: 'logs'
         },
         method:'POST',
@@ -837,7 +860,7 @@ function clearDataFormCloud(){
             wx.request({
               url: 'https://api.weixin.qq.com/tcb/databasecollectionadd?access_token='+res.data.access_token, //仅为示例，并非真实的接口地址
               data: {
-                env: 'offer-123',
+                env: 'test-5gbxczf0565156d5',
                 collection_name: 'logs'
               },
               method:'POST',
@@ -870,4 +893,5 @@ module.exports = {
   saveDataToCloud:saveDataToCloud,
   clearDataFormCloud:clearDataFormCloud,
   getElevatorID:getElevatorID,
+  getIsSetElevatorID:getIsSetElevatorID
 }

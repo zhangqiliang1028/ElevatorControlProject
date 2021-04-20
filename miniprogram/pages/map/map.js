@@ -6,7 +6,7 @@ const ROBOTID = 0x11111111
 //用于标识这是映射的第几个继电器
 var mappingindex = 0
 var mappingList = new Array()
-var reply_count = 0
+var reLink_count = 0 //重新映射计数
 Page({
 
   /**
