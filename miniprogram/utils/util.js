@@ -838,7 +838,6 @@ function saveDataToCloud(data){
 
 //清除日志数据
 function clearDataFormCloud(){
-  console.log('++++++++++++删除集合+++++++++++++++')
   wx.request({
     url: 'https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=	wx108345217f87e16e&secret=1928c57419d6eea623391691e9dd46c1', //获取用户凭证
     success(res){

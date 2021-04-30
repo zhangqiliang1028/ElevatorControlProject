@@ -250,7 +250,7 @@ Page({
   onLoad: function () {
     //清除云端日志记录
     console.log('清除云端日志记录')
-    //utils.clearDataFormCloud();
+    utils.clearDataFormCloud();
     //清除缓存
     wx.clearStorage();
   },
