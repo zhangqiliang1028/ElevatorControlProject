@@ -190,7 +190,7 @@ Page({
                     success: res => {
                       console.log(res);
                       wx.request({
-                        url: 'https://api.weixin.qq.com/sns/jscode2session?appid=wxb67b23a24ceb75e5&secret=2a91184c0f0a97a4afa5fa8548843189&js_code=' + res.code + '&grant_type=authorization_code',
+                        url: 'https://api.weixin.qq.com/sns/jscode2session?appid=wx108345217f87e16e&secret=1928c57419d6eea623391691e9dd46c1&js_code=' + res.code + '&grant_type=authorization_code',
                         success: res => {
                           // 获取到用户的 openid
                           wx.showToast({

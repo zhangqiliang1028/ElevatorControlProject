@@ -1,8 +1,8 @@
 const Decoder = require("Decoder.js");
-
-
+var timer
 var isSetElevatorID = false;
 var ElevatorID = ''
+var app = getApp()
 function getIsSetElevatorID(){
   return isSetElevatorID
 }
@@ -781,6 +781,7 @@ function writeBLECharacteristicValue(deviceId,serviceId,writeCharacteristicId,in
       pos += bytes;
       bytes -= bytes;
     }
+    
     wx.writeBLECharacteristicValue({   //发送信息
       deviceId: deviceId,
       serviceId: serviceId,
@@ -788,10 +789,14 @@ function writeBLECharacteristicValue(deviceId,serviceId,writeCharacteristicId,in
     // 这里的value是ArrayBuffer类型
       value: tmpBuffer,
       success: function (res) {
+        if(timer){
+          clearInterval(timer)
+        }
+        app.globalData.reTransmission_count = 0
         var log = "写入成功：" + res.errMsg + "\n";
         console.log(log);
       },
-  
+
       fail: function (res) {
         var log ="写入失败" + res.errMsg+"\n";
         console.log(log);
@@ -801,14 +806,46 @@ function writeBLECharacteristicValue(deviceId,serviceId,writeCharacteristicId,in
             icon:'none',
             duration:2000
           })
-        }else {
+        }else if(res.errCode===10008){
+          /*
+          wx.showToast({
+            title: '数据写入失败:'+res.errCode,
+            icon:'none',
+            duration:2000
+          })
+          */
+          if(timer){
+            clearInterval(timer)
+          }
+          timer = setInterval(function(){
+            if (app.globalData.reTransmission_count<5){
+              app.globalData.reTransmission_count++;
+              /*
+              wx.showToast({
+                title: '正在连接...',
+                icon:'loading',
+                duration:1000
+              });
+              */
+              writeBLECharacteristicValue(deviceId,serviceId,writeCharacteristicId,info,payloadTestSwitch); //传一个楼层的映射数据
+            }
+            else if(app.globalData.reTransmission_count>=5){
+              app.globalData.reTransmission_count = 0
+              wx.showToast({
+                title: '请重试',
+                icon:'error',
+                duration:2000
+              });
+            }
+          },3000)
+      
+        }else{
           wx.showToast({
             title: '数据写入失败:'+res.errCode,
             icon:'none',
             duration:2000
           })
         }
-
       },
     })
     
@@ -876,6 +913,41 @@ function clearDataFormCloud(){
   })
 }
 
+function reTransmission(deviceId,serviceId,writeCharacteristicId,info,payloadConfigItem){
+  var that = this;
+  if(app.globalData.reTransmission_count == 0){
+    app.globalData.reTransmission_count++;
+    console.log("未收到楼层设置消息回复，重新发送数据")
+    wx.showToast({
+      title: '第'+app.globalData.reTransmission_count+'次连接...',
+      icon:'loading',
+      duration:1000
+    });  
+    util.writeBLECharacteristicValue(deviceId,serviceId,writeCharacteristicId,info,payloadConfigItem);
+  }
+  else if(app.globalData.reTransmission_count < 5){
+    setTimeout(function(){
+      app.globalData.reTransmission_count++;
+      console.log("未收到楼层设置消息回复，重新发送数据")
+      wx.showToast({
+        title: '第'+app.globalData.reTransmission_count+'次连接...',
+        icon:'loading',
+        duration:1000
+      });  
+      util.writeBLECharacteristicValue(deviceId,serviceId,writeCharacteristicId,info,payloadConfigItem);
+    },2000)
+  }
+  else{
+    app.globalData.reTransmission_count = 0
+    wx.showToast({
+      title: '请重试',
+      icon:'error',
+      duration:2000
+    });
+  }
+
+}
+
 module.exports = {
   stringToBytes: stringToBytes,
   ab2hext: ab2hext,
@@ -892,5 +964,6 @@ module.exports = {
   saveDataToCloud:saveDataToCloud,
   clearDataFormCloud:clearDataFormCloud,
   getElevatorID:getElevatorID,
-  getIsSetElevatorID:getIsSetElevatorID
+  getIsSetElevatorID:getIsSetElevatorID,
+  reTransmission:reTransmission
 }

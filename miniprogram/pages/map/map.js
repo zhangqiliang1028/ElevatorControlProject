@@ -1,12 +1,11 @@
 const utils = require("../../utils/util.js");
 const Decoder = require("../../utils/Decoder.js");
-
+var timer
 const app = getApp()
 const ROBOTID = 0x11111111
 //用于标识这是映射的第几个继电器
 var mappingindex = 0
 var mappingList = new Array()
-var reLink_count = 0 //重新映射计数
 Page({
 
   /**
@@ -20,14 +19,14 @@ Page({
       name:'不刷卡',
       id:0},
       {name:'刷卡-1',id:1},{name:'刷卡-2',id:2}],
-    eightInput:'',
-    sevenInput:'',
-    sixInput:'',
-    fiftyInput:'',
-    fourInput:'',
-    threeInput:'',
-    twoInput:'',
-    oneInput:'',
+    eightInput:'8',
+    sevenInput:'7',
+    sixInput:'6',
+    fiftyInput:'5',
+    fourInput:'4',
+    threeInput:'3',
+    twoInput:'2',
+    oneInput:'1',
 //设置标签
     isEightInput:false,
     isSevenInput:false,
@@ -147,7 +146,7 @@ onBLECharacteristicValueChange(){
     var resValue = utils.ab2hext(res.value); //16进制字符串
     var strprint = Decoder.GBKHexstrToString(resValue)
     console.log(strprint)
-    //utils.saveDataToCloud(strprint);
+    utils.saveDataToCloud(strprint);
     
     var resValueStr = utils.hexToString(resValue);
     var msg = utils.analysis(resValueStr)
@@ -166,7 +165,6 @@ onBLECharacteristicValueChange(){
 //在这里对消息进行解析
 onReceivedMsg(msg){
   var that = this ; 
-
   console.log("开始解析收到的信息")
   console.log(msg[0] + msg[msg.length])
   var msgHead = [
@@ -224,29 +222,29 @@ onReceivedMsg(msg){
         console.log("负载CRC校验错误")
       }else{
         var result = payload[2] * 256 + payload[3]
-        if(payload[0] == 0xE1){    //收到楼层映射消息回复
-          this.setData({
-            singleFloatInfoReplReplied:true,
-          })
-            
-          if(result){
+        if(payload[0] == 0xE1){    //收到楼层映射消息回复 
+          if(result){ 
+            app.globalData.reTransmission_count = 0
             console.log("映射成功")
+            /*
             wx.showToast({
               title: mappingindex+'号映射成功',
               duration:1000
             })
+            */
             that.mappingByOrder();
-          }else{
+          }else{   
             console.log("映射失败")  //可以设置重新映射选项
             wx.showToast({
               title: '映射失败',
               duration:2000
             })
-          }
         }
       }
     }
   }
+  }
+  
 },
 
 //picker事件
@@ -443,17 +441,28 @@ mappingByOrder(){
   
 
   if(mappingindex < mappingList.length){
+    wx.showToast({
+      title: '正在映射...',
+      icon:'loading',
+      duration:3000
+    })
     console.log("配置第" + (mappingindex + 1) + "个继电器")
     this.mappingConfig(info,mappingList[mappingindex].floorNumber,mappingList[mappingindex].relayID,mappingList[mappingindex].needCard)
     that.showRelay(mappingList[mappingindex].relayID);
     mappingindex++
-  }else{
-    console.log("继电器映射结束")
-    wx.showToast({
-      title: '继电器映射完成',
-      duration:1000
+  }else{ 
+    that.setData({
+      singleFloatInfoReplReplied:true
     })
-    that.clearAll(); //清除设置的映射数据maplist[]列表
+    clearInterval(timer)
+    setTimeout(function(){
+      console.log("继电器映射结束")
+      wx.showToast({
+        title: '继电器映射完成',
+        duration:3000
+      })
+      that.clearAll(); //清除设置的映射数据maplist[]列表
+    },1000)
   }
 },
 
@@ -463,7 +472,7 @@ showRelay(relayID){
   if(relayID%8==0){
     that.oneShow
   }else if(relayID%8==1){
-    that.twoShow,1000
+    that.twoShow
   }else if(relayID%8==2){
    that.threeShow
   }else if(relayID%8==3){
@@ -496,38 +505,42 @@ mappingConfig(info,floorNumber,relayID,needCard){
   var serviceId = wx.getStorageSync('serviceId');
   var writeCharacteristicId = wx.getStorageSync('writeCharacteristicId');
   that.setData({
-    singleFloatInfoReplReplied:false,
     deviceId:deviceId,
     serviceId:serviceId,
     writeCharacteristicId:writeCharacteristicId,
   })
-  reLink_count = 0
   utils.writeBLECharacteristicValue(deviceId,serviceId,writeCharacteristicId,info,that.data.payloadConfigItem); //传一个楼层的映射数据
-  that.reLink(deviceId,serviceId,writeCharacteristicId,info);
-
-},
-reLink:function(deviceId,serviceId,writeCharacteristicId,info){
-  var that = this;
-  setTimeout(function(){
-    if(!that.data.singleFloatInfoReplReplied && reply_count < 3){
-      reLink_count++;
+  
+  if(timer){
+    clearInterval(timer)
+  }
+  timer = setInterval(function(){
+    if (!that.data.singleFloatInfoReplReplied && app.globalData.reTransmission_count<5){
+      app.globalData.reTransmission_count++;
       console.log("未收到楼层设置消息回复，重新发送数据")
+      /*
       wx.showToast({
-        title: '第'+ reLink_count +'次重新连接...',
+        title: '正在连接...',
         icon:'loading',
-        duration:2000
+        duration:1000
       });
-      utils.writeBLECharacteristicValue(deviceId,serviceId,writeCharacteristicId,info,that.data.payloadConfigItem);
-      that.reLink(deviceId,serviceId,writeCharacteristicId,info)
+      */
+      utils.writeBLECharacteristicValue(deviceId,serviceId,writeCharacteristicId,info,that.data.payloadConfigItem); //传一个楼层的映射数据
     }
-    else if(!that.data.singleFloatInfoReplReplied && reply_count >= 3){
+    else if(!that.data.singleFloatInfoReplReplied && app.globalData.reTransmission_count>=5){
+      app.globalData.reTransmission_count = 0
       wx.showToast({
-        title: '连接失败',
+        title: '请重试',
         icon:'error',
         duration:2000
       });
     }
-  },2000)
+  },3000)
+
+},
+
+reTransmission(){
+
 },
 //设置继电器映射
 sendMappingMsg(){
@@ -535,8 +548,8 @@ sendMappingMsg(){
   var that = this ;
   mappingindex = 0
   mappingList = []
-  this.setData({  //重置回复消息为false
-    singleFloatInfoReplReplied:false,
+  that.setData({
+    singleFloatInfoReplReplied:false
   })
   var eightInput = that.data.eightInput;
   var sevenInput=that.data.sevenInput;
@@ -686,6 +699,5 @@ clearAll(){
       mapConfigDisable: true 
     })
   }
-
 })
 

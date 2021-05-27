@@ -17,7 +17,8 @@ App({
     isLink:false ,//是否连接
     deviceId:'',
     serviceId:'',
-    isReBoot:false
+    isReBoot:false,
+    reTransmission_count:0  //记录重传次数
   },
   //toast提示
   toastTips: function(txt) {
