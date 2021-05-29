@@ -1,12 +1,10 @@
 const Decoder = require("Decoder.js");
-var timer
-var isSetElevatorID = false;
-var ElevatorID = ''
-var app = getApp()
-function getIsSetElevatorID(){
+var isSetElevatorID = false; //是否获取到电梯ID
+var ElevatorID = '' //电梯ID初始化
+function getIsSetElevatorID(){  //返回是否获取到了电梯ID
   return isSetElevatorID
 }
-function getElevatorID(){
+function getElevatorID(){ //返回电梯ID
   return ElevatorID
 }
 // 字符串转byte
@@ -349,7 +347,7 @@ function analysis(valueStr){
   }
   
 }
-//在这里对头部消息进行解析提取
+//在这里对头部消息进行解析提取电梯ID
 function setElevatorID(msg){
   
   console.log("开始解析头部信息")
@@ -751,16 +749,14 @@ function callBackGetAllInfo(payload){
   wx.setStorageSync('isLink', isLink)
 }
 
-
-
 //向低功耗蓝牙设备特征值中写入二进制数据。
 //注意：必须设备的特征值支持write才可以成功调用，具体参照 characteristic 的 properties 属性
 function writeBLECharacteristicValue(deviceId,serviceId,writeCharacteristicId,info,payloadTestSwitch){
   var that = this ;
   var res = 1
   //产生传输数据
-  var myData = that.productMessage(info,payloadTestSwitch);
-  that.computeRobotMessageCRC(myData);
+  var myData = this.productMessage(info,payloadTestSwitch);
+  this.computeRobotMessageCRC(myData);
   var buffer = new ArrayBuffer(myData.length);
   var dataView = new DataView(buffer);
   for(var i = 0;i < myData.length;++i){
@@ -789,10 +785,8 @@ function writeBLECharacteristicValue(deviceId,serviceId,writeCharacteristicId,in
     // 这里的value是ArrayBuffer类型
       value: tmpBuffer,
       success: function (res) {
-        if(timer){
-          clearInterval(timer)
-        }
-        app.globalData.reTransmission_count = 0
+        reTransmission_count = 0
+        isSuccess = true
         var log = "写入成功：" + res.errMsg + "\n";
         console.log(log);
       },
@@ -807,48 +801,34 @@ function writeBLECharacteristicValue(deviceId,serviceId,writeCharacteristicId,in
             duration:2000
           })
         }else if(res.errCode===10008){
-          /*
-          wx.showToast({
-            title: '数据写入失败:'+res.errCode,
-            icon:'none',
-            duration:2000
-          })
-          */
-          if(timer){
-            clearInterval(timer)
-          }
-          timer = setInterval(function(){
-            if (app.globalData.reTransmission_count<5){
-              app.globalData.reTransmission_count++;
-              /*
-              wx.showToast({
-                title: '正在连接...',
-                icon:'loading',
-                duration:1000
-              });
-              */
-              writeBLECharacteristicValue(deviceId,serviceId,writeCharacteristicId,info,payloadTestSwitch); //传一个楼层的映射数据
+          var pages = getCurrentPages() //获取加载的页面
+          var currentPage = pages[pages.length-1] //获取当前页面的对象
+          var url = currentPage.route //当前页面url 
+         if(url != 'pages/map/map'){
+          wx.showModal({
+            cancelColor: 'blue',
+            title:'温馨提示',
+            content:'操作失败，请重试',
+            success (res) {
+              if (res.confirm) {
+                console.log('用户点击确定')
+              } else if (res.cancel) {
+                console.log('用户点击取消')
+              }
             }
-            else if(app.globalData.reTransmission_count>=5){
-              app.globalData.reTransmission_count = 0
-              wx.showToast({
-                title: '请重试',
-                icon:'error',
-                duration:2000
-              });
-            }
-          },3000)
-      
+          }) 
+         }
+
         }else{
           wx.showToast({
-            title: '数据写入失败:'+res.errCode,
+            title: '数据写入失败', 
             icon:'none',
             duration:2000
           })
         }
       },
     })
-    
+
   }
 }
 
@@ -913,41 +893,6 @@ function clearDataFormCloud(){
   })
 }
 
-function reTransmission(deviceId,serviceId,writeCharacteristicId,info,payloadConfigItem){
-  var that = this;
-  if(app.globalData.reTransmission_count == 0){
-    app.globalData.reTransmission_count++;
-    console.log("未收到楼层设置消息回复，重新发送数据")
-    wx.showToast({
-      title: '第'+app.globalData.reTransmission_count+'次连接...',
-      icon:'loading',
-      duration:1000
-    });  
-    util.writeBLECharacteristicValue(deviceId,serviceId,writeCharacteristicId,info,payloadConfigItem);
-  }
-  else if(app.globalData.reTransmission_count < 5){
-    setTimeout(function(){
-      app.globalData.reTransmission_count++;
-      console.log("未收到楼层设置消息回复，重新发送数据")
-      wx.showToast({
-        title: '第'+app.globalData.reTransmission_count+'次连接...',
-        icon:'loading',
-        duration:1000
-      });  
-      util.writeBLECharacteristicValue(deviceId,serviceId,writeCharacteristicId,info,payloadConfigItem);
-    },2000)
-  }
-  else{
-    app.globalData.reTransmission_count = 0
-    wx.showToast({
-      title: '请重试',
-      icon:'error',
-      duration:2000
-    });
-  }
-
-}
-
 module.exports = {
   stringToBytes: stringToBytes,
   ab2hext: ab2hext,
@@ -964,6 +909,5 @@ module.exports = {
   saveDataToCloud:saveDataToCloud,
   clearDataFormCloud:clearDataFormCloud,
   getElevatorID:getElevatorID,
-  getIsSetElevatorID:getIsSetElevatorID,
-  reTransmission:reTransmission
+  getIsSetElevatorID:getIsSetElevatorID
 }
